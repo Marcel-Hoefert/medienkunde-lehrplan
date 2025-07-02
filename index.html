@@ -1,0 +1,1665 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interaktiver Lehrplan: Medienkunde Förderschule</title>
+    <!-- Chosen Palette: Warm & Welcoming Neutrals -->
+    <!-- Application Structure Plan: Die Anwendung ist als interaktives Dashboard mit einer oberen Navigationsleiste konzipiert, die einen nicht-linearen Zugriff auf die Hauptbereiche ermöglicht: Grundlagen, Module, Werkzeuge und Elterninformationen. Die Module werden in einer Tab-Oberfläche präsentiert, um den Fokus auf jeweils ein Kernthema zu lenken. Innerhalb jedes Moduls werden die einzelnen Lerneinheiten in einer Akkordeon-Struktur dargestellt. Dies ermöglicht Lehrkräften, von der groben Modulübersicht zur detaillierten Stundenplanung zu navigieren und alle relevanten Informationen (Inhalt, Didaktik, Material) an einem Ort zu finden. Diese hierarchische Struktur wurde gewählt, um die Komplexität des Lehrplans handhabbar zu machen und eine hohe Benutzerfreundlichkeit für die Unterrichtsvorbereitung zu gewährleisten. -->
+    <!-- Visualization & Content Choices: 
+        - Pädagogische Prinzipien: Ziel: Organisieren. Methode: Interaktive HTML-Karten mit Unicode-Symbolen. Begründung: Bietet eine schnelle, visuelle Übersicht der Grundwerte des Lehrplans.
+        - Lerneinheiten (NEU): Ziel: Strukturieren/Informieren. Methode: HTML-Akkordeon mit detaillierten Unterrichtsplänen inkl. Tabellen und Druckfunktion. Begründung: Stellt detaillierte Unterrichtsinhalte übersichtlich und bei Bedarf dar, ohne die Seite zu überladen.
+        - Modul-Kompetenzen: Ziel: Vergleichen. Methode: Horizontale Balken- und Radardiagramme (Chart.js/Canvas). Begründung: Stellt die Lerninhalte und Kompetenzschwerpunkte jedes Moduls visuell dar und ermöglicht einen schnellen Vergleich.
+        - Chancen & Risiken (Soziale Medien): Ziel: Vergleichen. Methode: Zwei gegenübergestellte vertikale Balkendiagramme (Chart.js/Canvas). Begründung: Direkter visueller Vergleich der positiven und negativen Aspekte.
+        - Notfallplan: Ziel: Organisieren/Prozess zeigen. Methode: Strukturiertes HTML/CSS mit Flexbox. Begründung: Stellt die Handlungsschritte klar und sequenziell dar.
+        - KI-Beispiele: Ziel: Beziehungen aufzeigen. Methode: Blasendiagramm (Chart.js/Canvas). Begründung: Visualisiert verschiedene Alltagsanwendungen von KI.
+        - Ressourcentabelle: Ziel: Informieren. Methode: Interaktive HTML-Tabelle. Begründung: Stellt strukturierte Informationen klar und zugänglich dar. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700&family=Roboto+Slab:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Lato', sans-serif; background-color: #F8F7F4; color: #4a4a4a; }
+        h1, h2, h3, h4, .nav-item { font-family: 'Roboto Slab', serif; }
+        .nav-item.active { border-bottom: 2px solid #C18C5D; color: #C18C5D; }
+        .tab-button.active { background-color: #C18C5D; color: white; }
+        .tab-button { background-color: #EAE7E1; color: #4a4a4a; }
+        .tab-pane { display: none; }
+        .tab-pane.active { display: block; }
+        .accordion-button {
+            width: 100%;
+            background-color: #FDFBF8;
+            border: 1px solid #EAE7E1;
+            text-align: left;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            transition: background-color 0.3s;
+        }
+        .accordion-button:hover, .accordion-button.active {
+            background-color: #EAE7E1;
+        }
+        .accordion-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.5s ease-out;
+            background-color: white;
+            border-radius: 0 0 0.5rem 0.5rem;
+            border: 1px solid #EAE7E1;
+            border-top: none;
+        }
+        .accordion-button .icon {
+            transition: transform 0.3s;
+        }
+        .accordion-button.active .icon {
+            transform: rotate(180deg);
+        }
+        .lesson-plan-table {
+            display: block;
+            overflow-x: auto;
+            white-space: nowrap;
+        }
+        .modal {
+            transition: opacity 0.25s ease;
+        }
+        @media print {
+            body > *:not(.print-container) {
+                display: none;
+            }
+            .print-container {
+                display: block;
+            }
+            .no-print {
+                display: none !important;
+            }
+            .accordion-content {
+                max-height: none !important;
+                overflow: visible !important;
+                border: none !important;
+                padding: 0 !important;
+            }
+            .accordion-item .accordion-button {
+                display: none;
+            }
+            .lesson-plan-table {
+                overflow-x: visible;
+                white-space: normal;
+            }
+            .lesson-plan-table table {
+                width: 100%;
+                table-layout: auto;
+            }
+            .lesson-plan-table th, .lesson-plan-table td {
+                white-space: normal;
+                word-wrap: break-word;
+            }
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <!-- Header & Navigation -->
+    <header class="bg-white/80 backdrop-blur-lg sticky top-0 z-40 shadow-sm no-print">
+        <div class="container mx-auto px-4">
+            <div class="flex justify-between items-center py-4 border-b border-gray-200">
+                <h1 class="text-xl md:text-2xl font-bold text-[#4a4a4a]">Lehrplan Medienkunde interaktiv</h1>
+                <nav class="hidden md:flex space-x-6">
+                    <a href="#grundlagen" class="nav-item text-gray-600 hover:text-[#C18C5D] transition-colors duration-300 pb-1">Grundlagen</a>
+                    <a href="#module" class="nav-item text-gray-600 hover:text-[#C18C5D] transition-colors duration-300 pb-1">Module</a>
+                    <a href="#werkzeuge" class="nav-item text-gray-600 hover:text-[#C18C5D] transition-colors duration-300 pb-1">Werkzeuge</a>
+                    <a href="#eltern" class="nav-item text-gray-600 hover:text-[#C18C5D] transition-colors duration-300 pb-1">Eltern & Schule</a>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <main class="container mx-auto px-4 py-12">
+        <!-- Intro Section -->
+        <section id="intro" class="text-center mb-16 no-print">
+            <h2 class="text-3xl md:text-4xl font-bold text-[#C18C5D] mb-4">Medienbildung für die Förderschule</h2>
+            <p class="max-w-3xl mx-auto text-lg text-gray-700">Diese interaktive Anwendung übersetzt den Lehrplan Medienkunde für die 5. und 6. Klasse in ein exploratives Format. Entdecken Sie die didaktischen Prinzipien, die vier Kernmodule und die begleitenden Ressourcen, die darauf abzielen, Schülerinnen und Schüler zu befähigen, sich kompetent und sicher in der digitalen Welt zu bewegen.</p>
+        </section>
+
+        <!-- Grundlagen Section -->
+        <section id="grundlagen" class="mb-16 scroll-mt-20 no-print">
+            <h2 class="text-3xl font-bold text-center mb-4 text-[#4a4a4a]">Didaktische Grundlagen</h2>
+            <p class="max-w-2xl mx-auto text-center text-gray-600 mb-10">Der Erfolg des Lehrplans stützt sich auf sechs fundamentale didaktische Prinzipien, die eine barrierearme, motivierende und inklusive Lernumgebung sicherstellen.</p>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                 <div class="bg-white p-6 rounded-lg shadow-md hover:shadow-xl transition-shadow duration-300">
+                    <span class="text-3xl">🗣️</span>
+                    <h3 class="text-xl font-bold my-2">Einfache Sprache</h3>
+                    <p class="text-gray-600">Klare, kurze Sätze und bekannter Wortschatz bauen kognitive Hürden ab.</p>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow-md hover:shadow-xl transition-shadow duration-300">
+                    <span class="text-3xl">🖼️</span>
+                    <h3 class="text-xl font-bold my-2">Visualisierung</h3>
+                    <p class="text-gray-600">Piktogramme und Bilder unterstützen das Verständnis komplexer Inhalte.</p>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow-md hover:shadow-xl transition-shadow duration-300">
+                    <span class="text-3xl">🛠️</span>
+                    <h3 class="text-xl font-bold my-2">Handlungsorientierung</h3>
+                    <p class="text-gray-600">Praktische Projekte machen abstraktes Wissen greifbar und erfahrbar.</p>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow-md hover:shadow-xl transition-shadow duration-300">
+                    <span class="text-3xl">🎮</span>
+                    <h3 class="text-xl font-bold my-2">Gamification</h3>
+                    <p class="text-gray-600">Spielerische Elemente wie der "Internet-Führerschein" steigern die Motivation.</p>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow-md hover:shadow-xl transition-shadow duration-300">
+                    <span class="text-3xl">🔄</span>
+                    <h3 class="text-xl font-bold my-2">Struktur & Rituale</h3>
+                    <p class="text-gray-600">Feste Abläufe und wiedererkennbare Strukturen geben Sicherheit und Orientierung.</p>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow-md hover:shadow-xl transition-shadow duration-300">
+                    <span class="text-3xl">🧩</span>
+                    <h3 class="text-xl font-bold my-2">Differenzierung</h3>
+                    <p class="text-gray-600">Aufgaben auf verschiedenen Niveaus ermöglichen allen die Teilhabe am Lernen.</p>
+                </div>
+            </div>
+        </section>
+
+        <hr class="border-t-2 border-gray-200 my-16 no-print">
+
+        <!-- Module Section -->
+        <section id="module" class="mb-16 scroll-mt-20">
+            <h2 class="text-3xl font-bold text-center mb-4 text-[#4a4a4a] no-print">Die 4 Kernmodule</h2>
+            <p class="max-w-2xl mx-auto text-center text-gray-600 mb-10 no-print">Wählen Sie ein Modul aus, um die detaillierten Lerneinheiten, Ziele und Methoden zu erkunden. Jedes Modul baut auf dem vorherigen auf und führt schrittweise zu einer umfassenden Medienkompetenz.</p>
+
+            <div class="bg-white p-4 md:p-6 rounded-lg shadow-lg">
+                <!-- Tab Buttons -->
+                <div class="flex flex-wrap justify-center gap-2 mb-6 no-print">
+                    <button class="tab-button font-bold py-2 px-4 rounded-md transition-colors duration-300" data-tab="1">1. Digitale Werkzeugkiste</button>
+                    <button class="tab-button font-bold py-2 px-4 rounded-md transition-colors duration-300 active" data-tab="2">2. Internet-Führerschein</button>
+                    <button class="tab-button font-bold py-2 px-4 rounded-md transition-colors duration-300" data-tab="3">3. Soziale Netzwerke</button>
+                    <button class="tab-button font-bold py-2 px-4 rounded-md transition-colors duration-300" data-tab="4">4. Einführung in die KI</button>
+                </div>
+
+                <!-- Tab Content -->
+                <div id="tab-content" class="min-h-[400px]">
+                    <!-- Module 1 -->
+                    <div class="tab-pane" id="tab-1">
+                        <h3 class="text-2xl font-bold mb-2 text-center text-[#C18C5D] no-print">Modul 1: Unsere digitale Werkzeugkiste</h3>
+                        <p class="text-center text-gray-600 mb-8 max-w-2xl mx-auto no-print">Dieses Modul macht abstrakte Informatik-Konzepte durch "Unplugged"-Aktivitäten greifbar. Es legt die Grundlage für das Verständnis, wie digitale Werkzeuge funktionieren.</p>
+                        
+                        <div class="space-y-4 max-w-4xl mx-auto">
+                            <!-- Accordion Item 1.1 -->
+                            <div class="accordion-item">
+                                <button class="accordion-button flex justify-between items-center no-print">
+                                    <span class="font-bold text-lg">1.1 Was steckt da drin? – Computer & Co. verstehen</span>
+                                    <span class="icon text-2xl font-bold text-[#C18C5D]">▼</span>
+                                </button>
+                                <div class="accordion-content">
+                                    <div class="p-6 space-y-6 relative">
+                                        <button class="print-button no-print absolute top-4 right-4 bg-[#C18C5D] text-white font-bold py-2 px-4 rounded-lg shadow-md hover:bg-[#a9794e] transition-colors duration-300">Diese Einheit drucken (PDF)</button>
+                                        <div>
+                                            <h4 class="font-bold text-xl text-[#C18C5D] mb-2">Eckdaten der Unterrichtseinheit</h4>
+                                            <ul class="list-disc list-inside space-y-1 pl-2">
+                                                <li><strong>Zeitbedarf:</strong> 1 Doppelstunde (ca. 90 Minuten)</li>
+                                                <li><strong>Sozialform:</strong> Plenum (Stuhlkreis), Einzelarbeit</li>
+                                                <li><strong>Raum:</strong> Klassenraum mit Stuhlkreis und Tischen</li>
+                                            </ul>
+                                        </div>
+                                        <div>
+                                            <h4 class="font-bold text-xl text-[#C18C5D] mb-2">Lernziele</h4>
+                                            <p><strong>Groblernziel:</strong> Die grundlegenden Bestandteile eines Computers identifizieren und zwischen Hardware und Software unterscheiden.</p>
+                                            <ul class="list-disc list-inside space-y-1 mt-2 pl-2">
+                                                <li>Die Begriffe "Hardware" und "Software" erklären.</li>
+                                                <li>Mindestens vier Hardware-Komponenten benennen.</li>
+                                                <li>Das Prinzip von Eingabe und Ausgabe verstehen.</li>
+                                                <li>Hardware-Komponenten auf einem Arbeitsblatt erkennen.</li>
+                                            </ul>
+                                        </div>
+                                        <div>
+                                            <h4 class="font-bold text-xl text-[#C18C5D] mb-2">Materialien und Medien</h4>
+                                            <ul class="list-disc list-inside space-y-1 pl-2">
+                                                <li>Demonstrationsgerät (PC/Laptop)</li>
+                                                <li>Optional: Alte Hardware-Teile zum Anfassen</li>
+                                                <li>Große Piktogramm-Karten (Hardware & Software)</li>
+                                                <li>Arbeitsblatt "Male an, was du anfassen kannst" & Buntstifte</li>
+                                            </ul>
+                                        </div>
+                                        <div>
+                                            <h4 class="font-bold text-xl text-[#C18C5D] mb-2">Geplanter Unterrichtsverlauf</h4>
+                                            <div class="lesson-plan-table">
+                                                <table class="w-full text-left border-collapse">
+                                                    <thead class="bg-gray-100">
+                                                        <tr>
+                                                            <th class="p-3 border">Phase</th>
+                                                            <th class="p-3 border">Zeit</th>
+                                                            <th class="p-3 border">Inhalt & Vorgehen der Lehrkraft</th>
+                                                            <th class="p-3 border">Aktivitäten der SuS</th>
+                                                            <th class="p-3 border">Differenzierung</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        <tr class="border-t">
+                                                            <td class="p-3 border align-top"><strong>Einstieg</strong></td>
+                                                            <td class="p-3 border align-top">15 Min.</td>
+                                                            <td class="p-3 border align-top">Ritual; Präsentation des Demonstrationsgeräts. Impulsfrage: "Was ist das? Was können wir damit machen?" Antworten sammeln.</td>
+                                                            <td class="p-3 border align-top">SuS äußern ihr Vorwissen und ihre Erfahrungen im Stuhlkreis.</td>
+                                                            <td class="p-3 border align-top">L gibt Zeit, spricht SuS direkt an, wiederholt in einfacher Sprache.</td>
+                                                        </tr>
+                                                        <tr class="border-t bg-gray-50">
+                                                            <td class="p-3 border align-top"><strong>Erarbeitung I</strong></td>
+                                                            <td class="p-3 border align-top">20 Min.</td>
+                                                            <td class="p-3 border align-top">Einführung der Begriffe Hardware/Software mit Analogie: "Körper (anfassen) vs. Gedanken (nicht anfassen)".</td>
+                                                            <td class="p-3 border align-top">SuS hören zu, wiederholen die Analogie und zeigen auf die Teile am Gerät.</td>
+                                                            <td class="p-3 border align-top">Einsatz von Gestik, Mimik und mehrfacher Wiederholung.</td>
+                                                        </tr>
+                                                        <tr class="border-t">
+                                                            <td class="p-3 border align-top"><strong>Erarbeitung II</strong></td>
+                                                            <td class="p-3 border align-top">25 Min.</td>
+                                                            <td class="p-3 border align-top">Detektivspiel: Piktogramm-Karten an SuS verteilen, diese legen sie an die richtigen Stellen am Gerät. Erklärung von Ein-/Ausgabe.</td>
+                                                            <td class="p-3 border align-top">SuS ordnen Karten zu, sprechen die Namen der Teile nach.</td>
+                                                            <td class="p-3 border align-top">Hilfe durch L oder Paten-Schüler; L benennt vor, SuS spricht nach.</td>
+                                                        </tr>
+                                                        <tr class="border-t bg-gray-50">
+                                                            <td class="p-3 border align-top"><strong>Sicherung</strong></td>
+                                                            <td class="p-3 border align-top">20 Min.</td>
+                                                            <td class="p-3 border align-top">Erklärung des Arbeitsblatts "Male an, was du anfassen kannst". Individuelle Hilfestellung bei der Bearbeitung.</td>
+                                                            <td class="p-3 border align-top">SuS malen die Hardware-Teile auf dem Arbeitsblatt an.</td>
+                                                            <td class="p-3 border align-top">Niveau 1: Nur anmalen. Niveau 2: Zusätzlich mit Begriffen verbinden.</td>
+                                                        </tr>
+                                                        <tr class="border-t">
+                                                            <td class="p-3 border align-top"><strong>Abschluss</strong></td>
+                                                            <td class="p-3 border align-top">10 Min.</td>
+                                                            <td class="p-3 border align-top">Einige SuS zeigen ihre Ergebnisse. Zusammenfassung der Stunde und Ausblick. Abschlussritual.</td>
+                                                            <td class="p-3 border align-top">SuS präsentieren ihre Arbeit und hören zu.</td>
+                                                            <td class="p-3 border align-top">Gezielte Auswahl für Erfolgserlebnisse; positive Würdigung jeder Arbeit.</td>
+                                                        </tr>
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Accordion Item 1.2 -->
+                            <div class="accordion-item">
+                                <button class="accordion-button flex justify-between items-center no-print">
+                                    <span class="font-bold text-lg">1.2 Ordnung im Digital-Chaos – Dateien und Ordner</span>
+                                    <span class="icon text-2xl font-bold text-[#C18C5D]">▼</span>
+                                </button>
+                                <div class="accordion-content">
+                                    <div class="p-6 space-y-6 relative">
+                                        <button class="print-button no-print absolute top-4 right-4 bg-[#C18C5D] text-white font-bold py-2 px-4 rounded-lg shadow-md hover:bg-[#a9794e] transition-colors duration-300">Diese Einheit drucken (PDF)</button>
+                                        <div>
+                                            <h4 class="font-bold text-xl text-[#C18C5D] mb-2">Eckdaten der Unterrichtseinheit</h4>
+                                            <ul class="list-disc list-inside space-y-1 pl-2">
+                                                <li><strong>Zeitbedarf:</strong> 1 Doppelstunde (ca. 90 Minuten)</li>
+                                                <li><strong>Sozialform:</strong> Plenum (Stuhlkreis), Partnerarbeit, Einzelarbeit</li>
+                                                <li><strong>Raum:</strong> Computerraum oder Klassenraum mit Tablets/Laptops</li>
+                                            </ul>
+                                        </div>
+                                        <div>
+                                            <h4 class="font-bold text-xl text-[#C18C5D] mb-2">Lernziele</h4>
+                                            <p><strong>Groblernziel:</strong> Das Konzept von Dateien und Ordnern zu verstehen und zur Organisation digitaler Informationen anzuwenden.</p>
+                                            <ul class="list-disc list-inside space-y-1 mt-2 pl-2">
+                                                <li>Die Analogie von Kiste (Festplatte), Mappe (Ordner) und Zettel (Datei) erklären.</li>
+                                                <li>Selbstständig einen neuen Ordner erstellen und benennen.</li>
+                                                <li>Eine einfache Datei erstellen und speichern.</li>
+                                                <li>Eine Datei in den richtigen Ordner verschieben.</li>
+                                                <li>Die Wichtigkeit von Ordnung für das Wiederfinden begründen.</li>
+                                            </ul>
+                                        </div>
+                                        <div>
+                                            <h4 class="font-bold text-xl text-[#C18C5D] mb-2">Materialien und Medien</h4>
+                                            <ul class="list-disc list-inside space-y-1 pl-2">
+                                                <li>Für die Analogie: Kiste, Mappen, Zettel</li>
+                                                <li>Computer/Tablets für SuS (1 pro Team)</li>
+                                                <li>Demonstrationsgerät (Beamer/Smartboard)</li>
+                                                <li>Piktogramm-Karten für "Datei" und "Ordner"</li>
+                                            </ul>
+                                        </div>
+                                        <div>
+                                            <h4 class="font-bold text-xl text-[#C18C5D] mb-2">Geplanter Unterrichtsverlauf</h4>
+                                            <div class="lesson-plan-table">
+                                                <table class="w-full text-left border-collapse">
+                                                    <thead class="bg-gray-100">
+                                                        <tr>
+                                                            <th class="p-3 border">Phase</th>
+                                                            <th class="p-3 border">Zeit</th>
+                                                            <th class="p-3 border">Inhalt & Vorgehen der Lehrkraft</th>
+                                                            <th class="p-3 border">Aktivitäten der SuS</th>
+                                                            <th class="p-3 border">Differenzierung</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        <tr class="border-t">
+                                                            <td class="p-3 border align-top"><strong>Einstieg</strong></td>
+                                                            <td class="p-3 border align-top">15 Min.</td>
+                                                            <td class="p-3 border align-top">Ritual; Präsentation einer unordentlichen Kiste. Impuls: "Wie finden wir hier etwas wieder? Wie schaffen wir Ordnung?"</td>
+                                                            <td class="p-3 border align-top">SuS äußern Ideen zur Sortierung im Stuhlkreis. Schlagen vor, Mappen zu nutzen.</td>
+                                                            <td class="p-3 border align-top">L unterstützt bei Wortfindung. Visuelle Hilfen (Piktogramme "Chaos"/"Ordnung").</td>
+                                                        </tr>
+                                                        <tr class="border-t bg-gray-50">
+                                                            <td class="p-3 border align-top"><strong>Erarbeitung I</strong></td>
+                                                            <td class="p-3 border align-top">20 Min.</td>
+                                                            <td class="p-3 border align-top">Einführung der Analogie: Kiste=Festplatte, Mappe=Ordner, Zettel=Datei. Gemeinsames Beschriften der Mappen. SuS sortieren Zettel in Mappen.</td>
+                                                            <td class="p-3 border align-top">SuS sortieren aktiv die physischen Zettel. Wiederholen und verknüpfen die Begriffe.</td>
+                                                            <td class="p-3 border align-top">Hilfe bei motorischen Schwierigkeiten. Mehrfache Wiederholung der Begriffe.</td>
+                                                        </tr>
+                                                        <tr class="border-t">
+                                                            <td class="p-3 border align-top"><strong>Erarbeitung II</strong></td>
+                                                            <td class="p-3 border align-top">30 Min.</td>
+                                                            <td class="p-3 border align-top">Demonstration am Beamer: Ordner erstellen, Datei erstellen, speichern und verschieben. Anleitung der SuS in Partnerarbeit.</td>
+                                                            <td class="p-3 border align-top">SuS erstellen in Partnerarbeit die Ordnerstruktur, speichern eine Datei und verschieben sie.</td>
+                                                            <td class="p-3 border align-top">Niveau 1: Klick-für-Klick-Anleitung. Niveau 2: Arbeit mit Piktogramm-Karten.</td>
+                                                        </tr>
+                                                        <tr class="border-t bg-gray-50">
+                                                            <td class="p-3 border align-top"><strong>Sicherung</strong></td>
+                                                            <td class="p-3 border align-top">15 Min.</td>
+                                                            <td class="p-3 border align-top">Kleine Einzelaufgabe: "Erstelle eine Textdatei mit deinem Namen und speichere sie im Ordner 'Texte'." L gibt individuelle Hilfe.</td>
+                                                            <td class="p-3 border align-top">SuS arbeiten alleine, wiederholen den Prozess. Zeigen ihre geordneten Ordner.</td>
+                                                            <td class="p-3 border align-top">Schnellere SuS dürfen weitere Ordner/Dateien erstellen.</td>
+                                                        </tr>
+                                                        <tr class="border-t">
+                                                            <td class="p-3 border align-top"><strong>Abschluss</strong></td>
+                                                            <td class="p-3 border align-top">10 Min.</td>
+                                                            <td class="p-3 border align-top">Einige Teams zeigen ihre Ordnerstruktur. Gespräch: "Warum ist Ordnung nützlich?" Zusammenfassung und Ausblick.</td>
+                                                            <td class="p-3 border align-top">SuS präsentieren ihre Arbeit, beantworten die Reflexionsfrage.</td>
+                                                            <td class="p-3 border align-top">Jede Präsentation wird positiv gewürdigt.</td>
+                                                        </tr>
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Accordion Item 1.3 -->
+                            <div class="accordion-item">
+                                <button class="accordion-button flex justify-between items-center no-print">
+                                    <span class="font-bold text-lg">1.3 Die Geheimsprache des Computers – Pixel und Codes</span>
+                                    <span class="icon text-2xl font-bold text-[#C18C5D]">▼</span>
+                                </button>
+                                <div class="accordion-content">
+                                    <div class="p-6 space-y-6 relative">
+                                        <button class="print-button no-print absolute top-4 right-4 bg-[#C18C5D] text-white font-bold py-2 px-4 rounded-lg shadow-md hover:bg-[#a9794e] transition-colors duration-300">Diese Einheit drucken (PDF)</button>
+                                        
+                                        <div>
+                                            <h4 class="font-bold text-xl text-[#C18C5D] mb-2">Eckdaten der Unterrichtseinheit</h4>
+                                            <ul class="list-disc list-inside space-y-1 pl-2">
+                                                <li><strong>Zeitbedarf:</strong> 2 Doppelstunden (ca. 180 Minuten)</li>
+                                                <li><strong>Sozialform:</strong> Plenum (Stuhlkreis), Einzelarbeit, Partnerarbeit</li>
+                                                <li><strong>Raum:</strong> Klassenraum mit Tischen</li>
+                                            </ul>
+                                        </div>
+                                        <div>
+                                            <h4 class="font-bold text-xl text-[#C18C5D] mb-2">Lernziele</h4>
+                                            <p><strong>Groblernziel:</strong> Ein grundlegendes Verständnis dafür zu entwickeln, wie Computer Informationen (Bilder, Zeichen) durch einfache Codes darstellen.</p>
+                                            <ul class="list-disc list-inside space-y-1 mt-2 pl-2">
+                                                <li>Erklären, dass digitale Bilder aus Pixeln bestehen.</li>
+                                                <li>Ein Pixelbild nach Vorlage erstellen.</li>
+                                                <li>Das Prinzip des Binärcodes (0/1) als "An/Aus" verstehen.</li>
+                                                <li>Einen kurzen Begriff mit einer Code-Tabelle ver- und entschlüsseln.</li>
+                                            </ul>
+                                        </div>
+                                        <div>
+                                            <h4 class="font-bold text-xl text-[#C18C5D] mb-2">Materialien und Medien</h4>
+                                            <ul class="list-disc list-inside space-y-1 pl-2">
+                                                <li>Arbeitsblätter "Pixel-Kunst" & Buntstifte</li>
+                                                <li>Zweifarbige Karten (z.B. rot/weiß) & Lichtschalter zur Demonstration</li>
+                                                <li>Arbeitsblatt mit einfacher Code-Tabelle (z.B. Caesar-Verschlüsselung)</li>
+                                                <li>Optional: Video "Die Sendung mit der Maus – Binärcode"</li>
+                                            </ul>
+                                        </div>
+
+                                        <hr class="my-8">
+
+                                        <div class="space-y-6">
+                                            <h4 class="font-bold text-2xl text-center text-[#C18C5D] mb-4">Doppelstunde 1: Die Welt der Pixel</h4>
+                                            <div>
+                                                <h5 class="font-bold text-xl text-[#C18C5D] mb-2">Geplanter Unterrichtsverlauf (90 Min.)</h5>
+                                                <div class="lesson-plan-table">
+                                                    <table class="w-full text-left border-collapse">
+                                                        <thead class="bg-gray-100">
+                                                            <tr>
+                                                                <th class="p-3 border">Phase</th>
+                                                                <th class="p-3 border">Zeit</th>
+                                                                <th class="p-3 border">Inhalt & Vorgehen der Lehrkraft</th>
+                                                                <th class="p-3 border">Aktivitäten der SuS</th>
+                                                                <th class="p-3 border">Differenzierung</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            <tr class="border-t">
+                                                                <td class="p-3 border align-top"><strong>Einstieg</strong></td>
+                                                                <td class="p-3 border align-top">20 Min.</td>
+                                                                <td class="p-3 border align-top">Ritual; L zeigt stark verpixeltes Bild. Impuls: "Was seht ihr?" L zoomt langsam heraus. "Aha! Das Bild besteht aus Vierecken, den **Pixeln**."</td>
+                                                                <td class="p-3 border align-top">SuS äußern Vermutungen, erleben "Aha-Effekt". Wiederholen den Begriff "Pixel".</td>
+                                                                <td class="p-3 border align-top">L wählt bekanntes Motiv, gibt Satzanfänge vor.</td>
+                                                            </tr>
+                                                            <tr class="border-t bg-gray-50">
+                                                                <td class="p-3 border align-top"><strong>Erarbeitung</strong></td>
+                                                                <td class="p-3 border align-top">40 Min.</td>
+                                                                <td class="p-3 border align-top">**Pixel-Kunstwerkstatt:** Erklärung von "Malen nach Zahlen/Pixeln". L teilt Arbeitsblätter aus und gibt individuelle Hilfe.</td>
+                                                                <td class="p-3 border align-top">SuS malen ihr eigenes Pixelbild. Erleben, wie aus Code ein Bild entsteht.</td>
+                                                                <td class="p-3 border align-top">Niveau 1: Einfaches Motiv, 2-3 Farben. Niveau 2: Komplexeres Motiv. Niveau 3: Eigenes Motiv entwerfen.</td>
+                                                            </tr>
+                                                            <tr class="border-t">
+                                                                <td class="p-3 border align-top"><strong>Abschluss</strong></td>
+                                                                <td class="p-3 border align-top">30 Min.</td>
+                                                                <td class="p-3 border align-top">**Galerie-Rundgang:** Fertige Bilder ausstellen. L würdigt jedes Werk. Zusammenfassung & Ausblick auf die nächste Stunde.</td>
+                                                                <td class="p-3 border align-top">SuS präsentieren stolz ihre Werke, betrachten die der anderen.</td>
+                                                                <td class="p-3 border align-top">Jeder SuS, der möchte, darf kurz etwas zu seinem Bild sagen.</td>
+                                                            </tr>
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <hr class="my-8">
+
+                                        <div class="space-y-6">
+                                            <h4 class="font-bold text-2xl text-center text-[#C18C5D] mb-4">Doppelstunde 2: Die Welt der Codes</h4>
+                                            <div>
+                                                <h5 class="font-bold text-xl text-[#C18C5D] mb-2">Geplanter Unterrichtsverlauf (90 Min.)</h5>
+                                                <div class="lesson-plan-table">
+                                                    <table class="w-full text-left border-collapse">
+                                                        <thead class="bg-gray-100">
+                                                            <tr>
+                                                                <th class="p-3 border">Phase</th>
+                                                                <th class="p-3 border">Zeit</th>
+                                                                <th class="p-3 border">Inhalt & Vorgehen der Lehrkraft</th>
+                                                                <th class="p-3 border">Aktivitäten der SuS</th>
+                                                                <th class="p-3 border">Differenzierung</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            <tr class="border-t">
+                                                                <td class="p-3 border align-top"><strong>Einstieg</strong></td>
+                                                                <td class="p-3 border align-top">15 Min.</td>
+                                                                <td class="p-3 border align-top">Ritual & Wiederholung: "Erinnert ihr euch an die Pixel?" L demonstriert An/Aus am Lichtschalter -> 1/0.</td>
+                                                                <td class="p-3 border align-top">SuS erinnern sich, wiederholen "An/Aus" und "1/0".</td>
+                                                                <td class="p-3 border align-top">Visueller Anker durch ein Pixel-Bild der letzten Stunde.</td>
+                                                            </tr>
+                                                            <tr class="border-t bg-gray-50">
+                                                                <td class="p-3 border align-top"><strong>Erarbeitung I</strong></td>
+                                                                <td class="p-3 border align-top">25 Min.</td>
+                                                                <td class="p-3 border align-top">**Binärcode:** L verteilt zweifarbige Karten (0/1). L gibt Muster vor, SuS legen nach. Zeigt, dass Muster Buchstaben sein können.</td>
+                                                                <td class="p-3 border align-top">SuS machen mit den Karten mit, verstehen das Prinzip.</td>
+                                                                <td class="p-3 border align-top">Physische Handlung reduziert die Abstraktion. Klare, wiederholte Anweisungen.</td>
+                                                            </tr>
+                                                            <tr class="border-t">
+                                                                <td class="p-3 border align-top"><strong>Erarbeitung II</strong></td>
+                                                                <td class="p-3 border align-top">35 Min.</td>
+                                                                <td class="p-3 border align-top">**Geheime Botschaften:** L stellt einfache Caesar-Verschlüsselung vor. Auftrag: "Verschlüsselt euren Namen und entschlüsselt den eures Partners."</td>
+                                                                <td class="p-3 border align-top">SuS wenden Code-Tabelle an, ver- und entschlüsseln Namen.</td>
+                                                                <td class="p-3 border align-top">Niveau 1: Nur Initialen. Schnellere SuS: Kurze Wörter wie "HALLO".</td>
+                                                            </tr>
+                                                            <tr class="border-t bg-gray-50">
+                                                                <td class="p-3 border align-top"><strong>Abschluss</strong></td>
+                                                                <td class="p-3 border align-top">15 Min.</td>
+                                                                <td class="p-3 border align-top">Zusammenfassung: "Computer brauchen für alles einen Code." L lobt SuS als "Code-Experten".</td>
+                                                                <td class="p-3 border align-top">Einige SuS lesen entschlüsselte Namen vor. Beantworten die Transferfrage.</td>
+                                                                <td class="p-3 border align-top">Zusammenfassung verbindet beide Stunden.</td>
+                                                            </tr>
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Accordion Item 1.4 -->
+                            <div class="accordion-item">
+                                <button class="accordion-button flex justify-between items-center no-print">
+                                    <span class="font-bold text-lg">1.4 Wir werden kreativ – Erste Programmierschritte</span>
+                                    <span class="icon text-2xl font-bold text-[#C18C5D]">▼</span>
+                                </button>
+                                <div class="accordion-content">
+                                    <div class="p-6 space-y-6 relative">
+                                        <button class="print-button no-print absolute top-4 right-4 bg-[#C18C5D] text-white font-bold py-2 px-4 rounded-lg shadow-md hover:bg-[#a9794e] transition-colors duration-300">Diese Einheit drucken (PDF)</button>
+                                        
+                                        <div>
+                                            <h4 class="font-bold text-xl text-[#C18C5D] mb-2">Eckdaten der Unterrichtseinheit</h4>
+                                            <ul class="list-disc list-inside space-y-1 pl-2">
+                                                <li><strong>Zeitbedarf:</strong> 2 Doppelstunden (ca. 180 Minuten)</li>
+                                                <li><strong>Sozialform:</strong> Plenum (Stuhlkreis), Partner- oder Einzelarbeit</li>
+                                                <li><strong>Raum:</strong> Computerraum oder Klassenraum mit Tablets/Laptops</li>
+                                            </ul>
+                                        </div>
+                                        <div>
+                                            <h4 class="font-bold text-xl text-[#C18C5D] mb-2">Lernziele</h4>
+                                            <p><strong>Groblernziel:</strong> Eine einfache, eigene digitale Animation oder Geschichte mit einer blockbasierten Programmierumgebung zu erstellen.</p>
+                                            <ul class="list-disc list-inside space-y-1 mt-2 pl-2">
+                                                <li>Erklären, dass "Programmieren" eine genaue Schritt-für-Schritt-Anweisung ist.</li>
+                                                <li>Eine digitale Figur (Sprite) und einen Hintergrund auswählen.</li>
+                                                <li>Eine einfache Befehlssequenz erstellen (bewegen, drehen, sagen).</li>
+                                                <li>Ein Startereignis ("Wenn grüne Flagge geklickt") verwenden.</li>
+                                                <li>Das eigene Projekt präsentieren.</li>
+                                            </ul>
+                                        </div>
+                                        <div>
+                                            <h4 class="font-bold text-xl text-[#C18C5D] mb-2">Materialien und Medien</h4>
+                                            <ul class="list-disc list-inside space-y-1 pl-2">
+                                                <li>Computer oder Tablets mit Scratch, OctoStudio oder ScratchJr</li>
+                                                <li>Demonstrationsgerät (Beamer/Smartboard)</li>
+                                                <li>Piktogramm-Karten für wichtige Befehle (Start, Gehe, Drehe, Sage)</li>
+                                                <li>Optional: Arbeitsblatt "Mein erstes Programm" zum Skizzieren</li>
+                                            </ul>
+                                        </div>
+
+                                        <hr class="my-8">
+
+                                        <div class="space-y-6">
+                                            <h4 class="font-bold text-2xl text-center text-[#C18C5D] mb-4">Doppelstunde 1: Vom Befehl zum Block</h4>
+                                            <div>
+                                                <h5 class="font-bold text-xl text-[#C18C5D] mb-2">Geplanter Unterrichtsverlauf (90 Min.)</h5>
+                                                <div class="lesson-plan-table">
+                                                    <table class="w-full text-left border-collapse">
+                                                        <thead class="bg-gray-100">
+                                                            <tr>
+                                                                <th class="p-3 border">Phase</th>
+                                                                <th class="p-3 border">Zeit</th>
+                                                                <th class="p-3 border">Inhalt & Vorgehen der Lehrkraft</th>
+                                                                <th class="p-3 border">Aktivitäten der SuS</th>
+                                                                <th class="p-3 border">Differenzierung</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            <tr class="border-t">
+                                                                <td class="p-3 border align-top"><strong>Einstieg</strong></td>
+                                                                <td class="p-3 border align-top">25 Min.</td>
+                                                                <td class="p-3 border align-top">Ritual; **"Unplugged"-Spiel "Programmiere den Roboter":** L ist der Roboter, SuS geben präzise Befehle für eine einfache Aufgabe (z.B. Stift holen).</td>
+                                                                <td class="p-3 border align-top">SuS geben mündliche Befehle, erleben spielerisch die Notwendigkeit von Präzision.</td>
+                                                                <td class="p-3 border align-top">L akzeptiert auch einfache Zurufe/Gesten und übersetzt sie.</td>
+                                                            </tr>
+                                                            <tr class="border-t bg-gray-50">
+                                                                <td class="p-3 border align-top"><strong>Erarbeitung</strong></td>
+                                                                <td class="p-3 border align-top">40 Min.</td>
+                                                                <td class="p-3 border align-top">**Einführung in die Programmierumgebung:** L stellt Scratch/OctoStudio vor, zeigt Bühne, Figuren, Blöcke. Demonstriert Figur- und Hintergrundauswahl, erste Bewegungsblöcke.</td>
+                                                                <td class="p-3 border align-top">SuS folgen der Demo, wählen eigene Figuren/Hintergründe, experimentieren frei mit Bewegungsblöcken.</td>
+                                                                <td class="p-3 border align-top">Klare, kurze Anweisungen. Vorauswahl an Figuren/Hintergründen für überforderte SuS.</td>
+                                                            </tr>
+                                                            <tr class="border-t">
+                                                                <td class="p-3 border align-top"><strong>Abschluss</strong></td>
+                                                                <td class="p-3 border align-top">25 Min.</td>
+                                                                <td class="p-3 border align-top">**"Zeig mal her!"-Runde:** SuS zeigen sich gegenseitig ihre Entdeckungen. L lobt das Ausprobieren. Zusammenfassung.</td>
+                                                                <td class="p-3 border align-top">SuS zeigen ihre ersten Ergebnisse, sind stolz auf das Ausprobierte.</td>
+                                                                <td class="p-3 border align-top">Informelle Präsentation im Partner- oder Kleingruppen-Setting.</td>
+                                                            </tr>
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <hr class="my-8">
+
+                                        <div class="space-y-6">
+                                            <h4 class="font-bold text-2xl text-center text-[#C18C5D] mb-4">Doppelstunde 2: Unsere erste Animation</h4>
+                                            <div>
+                                                <h5 class="font-bold text-xl text-[#C18C5D] mb-2">Geplanter Unterrichtsverlauf (90 Min.)</h5>
+                                                <div class="lesson-plan-table">
+                                                    <table class="w-full text-left border-collapse">
+                                                        <thead class="bg-gray-100">
+                                                            <tr>
+                                                                <th class="p-3 border">Phase</th>
+                                                                <th class="p-3 border">Zeit</th>
+                                                                <th class="p-3 border">Inhalt & Vorgehen der Lehrkraft</th>
+                                                                <th class="p-3 border">Aktivitäten der SuS</th>
+                                                                <th class="p-3 border">Differenzierung</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            <tr class="border-t">
+                                                                <td class="p-3 border align-top"><strong>Einstieg</strong></td>
+                                                                <td class="p-3 border align-top">15 Min.</td>
+                                                                <td class="p-3 border align-top">Ritual & Wiederholung: "Wie haben wir die Figuren bewegt?" L wiederholt kurz die Oberfläche und führt Start-Ereignis und "Sage"-Block ein.</td>
+                                                                <td class="p-3 border align-top">SuS erinnern sich, öffnen ihre Projekte, lernen neue Blöcke kennen.</td>
+                                                                <td class="p-3 border align-top">Visuelle Unterstützung durch Piktogramm-Karten für neue Befehle.</td>
+                                                            </tr>
+                                                            <tr class="border-t bg-gray-50">
+                                                                <td class="p-3 border align-top"><strong>Erarbeitung</strong></td>
+                                                                <td class="p-3 border align-top">45 Min.</td>
+                                                                <td class="p-3 border align-top">**Projektzeit:** Offenes Ziel: "Lasst eure Figur laufen und 'Hallo' sagen." L ermutigt zu eigenen Ideen und hilft bei der Fehlersuche.</td>
+                                                                <td class="p-3 border align-top">SuS arbeiten an ihrem Projekt, testen es, helfen sich gegenseitig und werden kreativ.</td>
+                                                                <td class="p-3 border align-top">Niveau 1: Vorlage mit Blöcken. Niveau 2: Freie Erstellung. Niveau 3: Zweite Figur/kleine Geschichte.</td>
+                                                            </tr>
+                                                            <tr class="border-t">
+                                                                <td class="p-3 border align-top"><strong>Abschluss</strong></td>
+                                                                <td class="p-3 border align-top">30 Min.</td>
+                                                                <td class="p-3 border align-top">**Kino-Zeit:** SuS präsentieren ihre Projekte am Beamer. Jedes Projekt wird beklatscht. L fasst zusammen: "Ihr seid jetzt Programmierer!"</td>
+                                                                <td class="p-3 border align-top">SuS präsentieren stolz ihre Animationen, geben positives Feedback.</td>
+                                                                <td class="p-3 border align-top">Präsentation ist freiwillig, jedes Ergebnis wird als Erfolg gefeiert.</td>
+                                                            </tr>
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                             <!-- Accordion Item 1.5 -->
+                            <div class="accordion-item">
+                                <button class="accordion-button flex justify-between items-center no-print">
+                                    <span class="font-bold text-lg">1.5 Projektwerkstatt: Unser eigener Trickfilm</span>
+                                    <span class="icon text-2xl font-bold text-[#C18C5D]">▼</span>
+                                </button>
+                                <div class="accordion-content">
+                                    <div class="p-6 space-y-6 relative">
+                                        <button class="print-button no-print absolute top-4 right-4 bg-[#C18C5D] text-white font-bold py-2 px-4 rounded-lg shadow-md hover:bg-[#a9794e] transition-colors duration-300">Diese Einheit drucken (PDF)</button>
+                                        
+                                        <div>
+                                            <h4 class="font-bold text-xl text-[#C18C5D] mb-2">Eckdaten der Unterrichtseinheit</h4>
+                                            <ul class="list-disc list-inside space-y-1 pl-2">
+                                                <li><strong>Zeitbedarf:</strong> 3 Doppelstunden (ca. 270 Minuten)</li>
+                                                <li><strong>Sozialform:</strong> Plenum, Kleingruppen (3-4 SuS)</li>
+                                                <li><strong>Raum:</strong> Klassenraum mit Platz für kleine "Filmsets"</li>
+                                            </ul>
+                                        </div>
+                                        <div>
+                                            <h4 class="font-bold text-xl text-[#C18C5D] mb-2">Lernziele</h4>
+                                            <p><strong>Groblernziel:</strong> In einer Kleingruppe einen eigenen, kurzen Stop-Motion-Film zu planen, zu produzieren und zu präsentieren.</p>
+                                            <ul class="list-disc list-inside space-y-1 mt-2 pl-2">
+                                                <li>Gemeinsam eine einfache Geschichte für den Film entwickeln.</li>
+                                                <li>Ein simples Storyboard mit 3-5 Bildern zeichnen.</li>
+                                                <li>Die Grundfunktionen einer Stop-Motion-App bedienen.</li>
+                                                <li>Im Team zusammenarbeiten und verschiedene Rollen übernehmen.</li>
+                                                <li>Stolz auf den selbst erstellten Film sein und ihn präsentieren.</li>
+                                            </ul>
+                                        </div>
+                                        <div>
+                                            <h4 class="font-bold text-xl text-[#C18C5D] mb-2">Materialien und Medien</h4>
+                                            <ul class="list-disc list-inside space-y-1 pl-2">
+                                                <li>Tablets oder Smartphones (1 pro Gruppe) mit App "Stop Motion Studio"</li>
+                                                <li>Stative oder Halterungen (z.B. Bücherstapel)</li>
+                                                <li>Bastelmaterial: LEGO, Knete, Pappe, Stifte etc.</li>
+                                                <li>Papier und Stifte für Storyboards</li>
+                                            </ul>
+                                        </div>
+
+                                        <hr class="my-8">
+
+                                        <div class="space-y-6">
+                                            <h4 class="font-bold text-2xl text-center text-[#C18C5D] mb-4">Doppelstunde 1: Von der Idee zum Drehbuch</h4>
+                                            <div>
+                                                <h5 class="font-bold text-xl text-[#C18C5D] mb-2">Geplanter Unterrichtsverlauf (90 Min.)</h5>
+                                                <div class="lesson-plan-table">
+                                                    <table class="w-full text-left border-collapse">
+                                                        <thead class="bg-gray-100">
+                                                            <tr>
+                                                                <th class="p-3 border">Phase</th>
+                                                                <th class="p-3 border">Zeit</th>
+                                                                <th class="p-3 border">Inhalt & Vorgehen der Lehrkraft</th>
+                                                                <th class="p-3 border">Aktivitäten der SuS</th>
+                                                                <th class="p-3 border">Differenzierung</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            <tr class="border-t">
+                                                                <td class="p-3 border align-top"><strong>Einstieg</strong></td>
+                                                                <td class="p-3 border align-top">20 Min.</td>
+                                                                <td class="p-3 border align-top">Ritual; L zeigt kurze, einfache Stop-Motion-Filme. Impuls: "So etwas machen wir selbst! Was brauchen wir dafür?"</td>
+                                                                <td class="p-3 border align-top">SuS schauen Filme, sind motiviert, sammeln erste Ideen.</td>
+                                                                <td class="p-3 border align-top">L wählt sehr simple Filme. Gezielte Fragen zur Beobachtung.</td>
+                                                            </tr>
+                                                            <tr class="border-t bg-gray-50">
+                                                                <td class="p-3 border align-top"><strong>Erarbeitung I</strong></td>
+                                                                <td class="p-3 border align-top">30 Min.</td>
+                                                                <td class="p-3 border align-top">Gruppenbildung; Auftrag: "Findet eine ganz einfache Geschichte für euren Film." L unterstützt und achtet auf Umsetzbarkeit.</td>
+                                                                <td class="p-3 border align-top">SuS finden sich in Gruppen, einigen sich auf eine einfache Handlung.</td>
+                                                                <td class="p-3 border align-top">L achtet auf ausgewogene Gruppen, gibt bei Bedarf Story-Vorschläge.</td>
+                                                            </tr>
+                                                            <tr class="border-t">
+                                                                <td class="p-3 border align-top"><strong>Erarbeitung II</strong></td>
+                                                                <td class="p-3 border align-top">25 Min.</td>
+                                                                <td class="p-3 border align-top">L erklärt Storyboard (Anfang, Mitte, Ende). Auftrag: "Malt eure Geschichte in 3-5 Bildern."</td>
+                                                                <td class="p-3 border align-top">SuS malen in der Gruppe ihr Storyboard und legen den Ablauf fest.</td>
+                                                                <td class="p-3 border align-top">Niveau 1: 3 Bilder. Niveau 2: Mehr Details. L hilft beim Zeichnen.</td>
+                                                            </tr>
+                                                            <tr class="border-t bg-gray-50">
+                                                                <td class="p-3 border align-top"><strong>Abschluss</strong></td>
+                                                                <td class="p-3 border align-top">15 Min.</td>
+                                                                <td class="p-3 border align-top">Jede Gruppe zeigt kurz ihr Storyboard und erzählt die Idee. L lobt und gibt Ausblick auf die nächste Stunde.</td>
+                                                                <td class="p-3 border align-top">SuS präsentieren ihre Storyboards, hören zu, freuen sich auf die Umsetzung.</td>
+                                                                <td class="p-3 border align-top">Kurze Präsentation zur Steigerung der Vorfreude.</td>
+                                                            </tr>
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <hr class="my-8">
+                                        
+                                        <div class="space-y-6">
+                                            <h4 class="font-bold text-2xl text-center text-[#C18C5D] mb-4">Doppelstunde 2: Die Film-Werkstatt</h4>
+                                            <div>
+                                                <h5 class="font-bold text-xl text-[#C18C5D] mb-2">Geplanter Unterrichtsverlauf (90 Min.)</h5>
+                                                <div class="lesson-plan-table">
+                                                    <table class="w-full text-left border-collapse">
+                                                        <thead class="bg-gray-100">
+                                                            <tr>
+                                                                <th class="p-3 border">Phase</th>
+                                                                <th class="p-3 border">Zeit</th>
+                                                                <th class="p-3 border">Inhalt & Vorgehen der Lehrkraft</th>
+                                                                <th class="p-3 border">Aktivitäten der SuS</th>
+                                                                <th class="p-3 border">Differenzierung</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                             <tr class="border-t">
+                                                                <td class="p-3 border align-top"><strong>Einstieg</strong></td>
+                                                                <td class="p-3 border align-top">15 Min.</td>
+                                                                <td class="p-3 border align-top">Ritual; L wiederholt Filmideen. Einführung in die App "Stop Motion Studio" (Neues Projekt, Foto, Abspielen).</td>
+                                                                <td class="p-3 border align-top">SuS erinnern sich, schauen bei der App-Demo aufmerksam zu.</td>
+                                                                <td class="p-3 border align-top">Sehr langsame, schrittweise Einführung der App-Funktionen.</td>
+                                                            </tr>
+                                                            <tr class="border-t bg-gray-50">
+                                                                <td class="p-3 border align-top"><strong>Erarbeitung</strong></td>
+                                                                <td class="p-3 border align-top">60 Min.</td>
+                                                                <td class="p-3 border align-top">"Baut eure Welt und erweckt eure Figuren zum Leben!" Gruppen bauen Sets und beginnen zu filmen. L hilft und gibt den Tipp: "Bewegt die Figur nur ein kleines Stück!"</td>
+                                                                <td class="p-3 border align-top">SuS bauen Sets, positionieren das Tablet, nehmen Bild für Bild auf, arbeiten im Team.</td>
+                                                                <td class="p-3 border align-top">L unterstützt bei der Technik. Unsichere SuS können "Regisseur" sein.</td>
+                                                            </tr>
+                                                            <tr class="border-t">
+                                                                <td class="p-3 border align-top"><strong>Abschluss</strong></td>
+                                                                <td class="p-3 border align-top">15 Min.</td>
+                                                                <td class="p-3 border align-top">Aufräumen. Jede Gruppe darf sich kurz ihren bisherigen Film anschauen. L lobt den Fortschritt.</td>
+                                                                <td class="p-3 border align-top">SuS räumen auf, schauen sich stolz ihre ersten Sequenzen an.</td>
+                                                                <td class="p-3 border align-top">Der erste Blick auf das Ergebnis ist ein starker Motivator.</td>
+                                                            </tr>
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <hr class="my-8">
+
+                                        <div class="space-y-6">
+                                            <h4 class="font-bold text-2xl text-center text-[#C18C5D] mb-4">Doppelstunde 3: Schnitt, Ton & Premiere</h4>
+                                            <div>
+                                                <h5 class="font-bold text-xl text-[#C18C5D] mb-2">Geplanter Unterrichtsverlauf (90 Min.)</h5>
+                                                <div class="lesson-plan-table">
+                                                    <table class="w-full text-left border-collapse">
+                                                        <thead class="bg-gray-100">
+                                                            <tr>
+                                                                <th class="p-3 border">Phase</th>
+                                                                <th class="p-3 border">Zeit</th>
+                                                                <th class="p-3 border">Inhalt & Vorgehen der Lehrkraft</th>
+                                                                <th class="p-3 border">Aktivitäten der SuS</th>
+                                                                <th class="p-3 border">Differenzierung</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            <tr class="border-t">
+                                                                <td class="p-3 border align-top"><strong>Einstieg</strong></td>
+                                                                <td class="p-3 border align-top">30 Min.</td>
+                                                                <td class="p-3 border align-top">Ritual; "Heute werden eure Filme fertig!" Gruppen drehen letzte Szenen. L zeigt optional, wie man Titel oder Ton hinzufügt.</td>
+                                                                <td class="p-3 border align-top">SuS stellen ihre Filme fertig, probieren ggf. neue Funktionen aus.</td>
+                                                                <td class="p-3 border align-top">Zusatzfunktionen sind optional, kein Muss.</td>
+                                                            </tr>
+                                                            <tr class="border-t bg-gray-50">
+                                                                <td class="p-3 border align-top"><strong>Präsentation</strong></td>
+                                                                <td class="p-3 border align-top">45 Min.</td>
+                                                                <td class="p-3 border align-top">**Die große Kino-Premiere:** Raum abdunkeln, L kündigt jeden Film an. Filme werden am Beamer gezeigt, es wird applaudiert.</td>
+                                                                <td class="p-3 border align-top">SuS sind aufgeregt, schauen gespannt die Filme, applaudieren und sind stolz.</td>
+                                                                <td class="p-3 border align-top">Feierliche, wertschätzende Atmosphäre, optional mit Popcorn.</td>
+                                                            </tr>
+                                                            <tr class="border-t">
+                                                                <td class="p-3 border align-top"><strong>Abschluss</strong></td>
+                                                                <td class="p-3 border align-top">15 Min.</td>
+                                                                <td class="p-3 border align-top">Reflexionsrunde: "Was hat Spaß gemacht? Was war schwierig?" L lobt alle für die tolle Teamarbeit.</td>
+                                                                <td class="p-3 border align-top">SuS erzählen von ihren Erfahrungen, reflektieren den Prozess.</td>
+                                                                <td class="p-3 border align-top">Fokus auf Prozess und positive Emotionen, nicht auf technische Bewertung.</td>
+                                                            </tr>
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Module 2 -->
+                    <div class="tab-pane active" id="tab-2">
+                        <h3 class="text-2xl font-bold mb-2 text-center text-[#C18C5D] no-print">Modul 2: Sicher und fair im Netz unterwegs</h3>
+                        <p class="text-center text-gray-600 mb-8 max-w-2xl mx-auto no-print">Dieses Modul legt den Grundstein für einen sicheren und verantwortungsbewussten Umgang mit dem Internet und schließt mit dem "Internet-Führerschein" ab.</p>
+
+                        <div class="space-y-4 max-w-4xl mx-auto">
+                            <!-- Accordion Item 2.1 -->
+                            <div class="accordion-item">
+                                <button class="accordion-button flex justify-between items-center no-print">
+                                    <span class="font-bold text-lg">2.1 Das Netz der Netze – Wie funktioniert das Internet?</span>
+                                    <span class="icon text-2xl font-bold text-[#C18C5D]">▼</span>
+                                </button>
+                                <div class="accordion-content">
+                                    <div class="p-6 space-y-6 relative">
+                                        <button class="print-button no-print absolute top-4 right-4 bg-[#C18C5D] text-white font-bold py-2 px-4 rounded-lg shadow-md hover:bg-[#a9794e] transition-colors duration-300">Diese Einheit drucken (PDF)</button>
+                                        <div>
+                                            <h4 class="font-bold text-xl text-[#C18C5D] mb-2">Eckdaten der Unterrichtseinheit</h4>
+                                            <ul class="list-disc list-inside space-y-1 pl-2">
+                                                <li><strong>Zeitbedarf:</strong> 1 Doppelstunde (ca. 90 Minuten)</li>
+                                                <li><strong>Sozialform:</strong> Plenum (Stuhlkreis), Rollenspiel in der Gesamtgruppe</li>
+                                                <li><strong>Raum:</strong> Sporthalle oder großer Klassenraum mit freier Fläche</li>
+                                            </ul>
+                                        </div>
+                                        <div>
+                                            <h4 class="font-bold text-xl text-[#C18C5D] mb-2">Lernziele</h4>
+                                            <p><strong>Groblernziel:</strong> Das Internet als ein weltweites Netzwerk von verbundenen Computern zu verstehen, die Informationen austauschen.</p>
+                                            <ul class="list-disc list-inside space-y-1 mt-2 pl-2">
+                                                <li>Die Begriffe "Client", "Server" und "Router" in einfachen Worten erklären.</li>
+                                                <li>In einem Rollenspiel eine der drei Rollen aktiv übernehmen.</li>
+                                                <li>Erklären, dass Informationen einen Weg durch das Netz zurücklegen.</li>
+                                                <li>Die Analogie des Wollknäuels als Datenleitung nachvollziehen.</li>
+                                            </ul>
+                                        </div>
+                                        <div>
+                                            <h4 class="font-bold text-xl text-[#C18C5D] mb-2">Materialien und Medien</h4>
+                                            <ul class="list-disc list-inside space-y-1 pl-2">
+                                                <li>Ein großes Wollknäuel</li>
+                                                <li>Laminierte Rollenkarten (Computer, Server, Router)</li>
+                                                <li>Informationskarten (z.B. Bild eines Katzenvideos)</li>
+                                                <li>Tafel oder Smartboard</li>
+                                            </ul>
+                                        </div>
+                                        <div>
+                                            <h4 class="font-bold text-xl text-[#C18C5D] mb-2">Geplanter Unterrichtsverlauf</h4>
+                                            <div class="lesson-plan-table">
+                                                <table class="w-full text-left border-collapse">
+                                                    <thead class="bg-gray-100">
+                                                        <tr>
+                                                            <th class="p-3 border">Phase</th>
+                                                            <th class="p-3 border">Zeit</th>
+                                                            <th class="p-3 border">Inhalt & Vorgehen der Lehrkraft</th>
+                                                            <th class="p-3 border">Aktivitäten der SuS</th>
+                                                            <th class="p-3 border">Differenzierung</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        <tr class="border-t">
+                                                            <td class="p-3 border align-top"><strong>Einstieg</strong></td>
+                                                            <td class="p-3 border align-top">15 Min.</td>
+                                                            <td class="p-3 border align-top">Ritual; Ausgangsfrage: "Wenn ihr ein YouTube-Video anschaut, wo kommt das her?" L sammelt Ideen ohne Bewertung.</td>
+                                                            <td class="p-3 border align-top">SuS äußern ihre Vermutungen ("Aus dem Internet", "Aus dem Kabel").</td>
+                                                            <td class="p-3 border align-top">L akzeptiert alle Antworten und bestärkt die SuS.</td>
+                                                        </tr>
+                                                        <tr class="border-t bg-gray-50">
+                                                            <td class="p-3 border align-top"><strong>Erarbeitung I</strong></td>
+                                                            <td class="p-3 border align-top">25 Min.</td>
+                                                            <td class="p-3 border align-top">Vorbereitung des Rollenspiels: L erklärt die Rollen (Computer, Server, Router) mit Piktogramm-Karten und verteilt sie.</td>
+                                                            <td class="p-3 border align-top">SuS nehmen ihre Rollen ein und positionieren sich im Raum.</td>
+                                                            <td class="p-3 border align-top">L wiederholt die Aufgaben mehrfach. Unsichere SuS bekommen eine "einfache" Rolle.</td>
+                                                        </tr>
+                                                        <tr class="border-t">
+                                                            <td class="p-3 border align-top"><strong>Erarbeitung II</strong></td>
+                                                            <td class="p-3 border align-top">30 Min.</td>
+                                                            <td class="p-3 border align-top">**Das Netz knüpfen:** Ein "Computer" ruft eine Anfrage, wirft das Wollknäuel zu einem "Router", dieser weiter, bis zum "Server". Der Server schickt die Info-Karte auf dem gleichen Weg zurück.</td>
+                                                            <td class="p-3 border align-top">SuS spielen aktiv mit, werfen das Wollknäuel und erleben, wie ein Netz entsteht und Informationen wandern.</td>
+                                                            <td class="p-3 border align-top">L moderiert das Spiel, hilft beim Werfen und kommentiert den Datenweg.</td>
+                                                        </tr>
+                                                        <tr class="border-t bg-gray-50">
+                                                            <td class="p-3 border align-top"><strong>Sicherung</strong></td>
+                                                            <td class="p-3 border align-top">10 Min.</td>
+                                                            <td class="p-3 border align-top">Auswertung im Woll-Netz: L stellt Reflexionsfragen zu den Aufgaben der einzelnen Rollen.</td>
+                                                            <td class="p-3 border align-top">SuS beantworten die Fragen aus ihrer Rolle heraus und blicken auf das entstandene Netz.</td>
+                                                            <td class="p-3 border align-top">Fragen sind einfach und direkt auf die Handlung bezogen.</td>
+                                                        </tr>
+                                                        <tr class="border-t">
+                                                            <td class="p-3 border align-top"><strong>Abschluss</strong></td>
+                                                            <td class="p-3 border align-top">10 Min.</td>
+                                                            <td class="p-3 border align-top">Transfer: L greift Ausgangsfrage auf und fasst zusammen: "Das Internet ist ein riesiges Netz..."</td>
+                                                            <td class="p-3 border align-top">SuS beantworten die Ausgangsfrage mit dem Gelernten neu.</td>
+                                                            <td class="p-3 border align-top">L nutzt die Begriffe aus dem Spiel zur Verankerung des Gelernten.</td>
+                                                        </tr>
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Accordion Item 2.2 -->
+                            <div class="accordion-item">
+                                <button class="accordion-button flex justify-between items-center no-print">
+                                    <span class="font-bold text-lg">2.2 Spuren im Netz – Meine Daten und ich</span>
+                                    <span class="icon text-2xl font-bold text-[#C18C5D]">▼</span>
+                                </button>
+                                <div class="accordion-content">
+                                    <div class="p-6 space-y-6 relative">
+                                        <button class="print-button no-print absolute top-4 right-4 bg-[#C18C5D] text-white font-bold py-2 px-4 rounded-lg shadow-md hover:bg-[#a9794e] transition-colors duration-300">Diese Einheit drucken (PDF)</button>
+                                        <div>
+                                            <h4 class="font-bold text-xl text-[#C18C5D] mb-2">Eckdaten der Unterrichtseinheit</h4>
+                                            <ul class="list-disc list-inside space-y-1 pl-2">
+                                                <li><strong>Zeitbedarf:</strong> 1 Doppelstunde (ca. 90 Minuten)</li>
+                                                <li><strong>Sozialform:</strong> Plenum (Stuhlkreis), Einzel- oder Partnerarbeit</li>
+                                                <li><strong>Raum:</strong> Klassenraum mit Möglichkeit für einen Stuhlkreis</li>
+                                            </ul>
+                                        </div>
+                                        <div>
+                                            <h4 class="font-bold text-xl text-[#C18C5D] mb-2">Lernziele</h4>
+                                            <p><strong>Groblernziel:</strong> Ein grundlegendes Bewusstsein für den Wert persönlicher Daten und die Notwendigkeit ihres Schutzes im Internet zu entwickeln.</p>
+                                            <ul class="list-disc list-inside space-y-1 mt-2 pl-2">
+                                                <li>Mindestens drei Beispiele für persönliche Daten nennen.</li>
+                                                <li>Zwischen "privaten" und "öffentlichen" Informationen unterscheiden.</li>
+                                                <li>Das Prinzip "Einmal im Netz – immer im Netz" anhand einer Analogie erklären.</li>
+                                                <li>Informationskarten korrekt den Kategorien "privat" und "öffentlich" zuordnen.</li>
+                                            </ul>
+                                        </div>
+                                        <div>
+                                            <h4 class="font-bold text-xl text-[#C18C5D] mb-2">Materialien und Medien</h4>
+                                            <ul class="list-disc list-inside space-y-1 pl-2">
+                                                <li>Eine "Schatzkiste" (privat) und eine Pinnwand (öffentlich)</li>
+                                                <li>Laminierte Piktogramm-Karten mit privaten und öffentlichen Informationen</li>
+                                                <li>Eine echte Postkarte und ein verschlossener Briefumschlag</li>
+                                                <li>Arbeitsblatt "Mein Daten-Tresor" & Stifte</li>
+                                            </ul>
+                                        </div>
+                                        <div>
+                                            <h4 class="font-bold text-xl text-[#C18C5D] mb-2">Geplanter Unterrichtsverlauf</h4>
+                                            <div class="lesson-plan-table">
+                                                <table class="w-full text-left border-collapse">
+                                                    <thead class="bg-gray-100">
+                                                        <tr>
+                                                            <th class="p-3 border">Phase</th>
+                                                            <th class="p-3 border">Zeit</th>
+                                                            <th class="p-3 border">Inhalt & Vorgehen der Lehrkraft</th>
+                                                            <th class="p-3 border">Aktivitäten der SuS</th>
+                                                            <th class="p-3 border">Differenzierung</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        <tr class="border-t">
+                                                            <td class="p-3 border align-top"><strong>Einstieg</strong></td>
+                                                            <td class="p-3 border align-top">15 Min.</td>
+                                                            <td class="p-3 border align-top">Ritual; Analogie mit Schatzkiste (privat) und Pinnwand (öffentlich). Impuls: "Was gehört wohin?"</td>
+                                                            <td class="p-3 border align-top">SuS äußern Ideen zur Zuordnung von geheimen und öffentlichen Dingen.</td>
+                                                            <td class="p-3 border align-top">L hilft mit konkreten Beispielen aus der Lebenswelt der SuS.</td>
+                                                        </tr>
+                                                        <tr class="border-t bg-gray-50">
+                                                            <td class="p-3 border align-top"><strong>Erarbeitung I</strong></td>
+                                                            <td class="p-3 border align-top">25 Min.</td>
+                                                            <td class="p-3 border align-top">Einführung des Begriffs "persönliche Daten". **Sortierspiel:** SuS ordnen Piktogramm-Karten der Schatzkiste oder der Pinnwand zu.</td>
+                                                            <td class="p-3 border align-top">SuS nehmen am Sortierspiel teil und begründen ihre Entscheidung (mit Hilfe).</td>
+                                                            <td class="p-3 border align-top">Unsichere SuS bekommen eindeutige Karten. L gibt klare Hilfestellungen.</td>
+                                                        </tr>
+                                                        <tr class="border-t">
+                                                            <td class="p-3 border align-top"><strong>Erarbeitung II</strong></td>
+                                                            <td class="p-3 border align-top">20 Min.</td>
+                                                            <td class="p-3 border align-top">Analogie Postkarte vs. Brief zur Erklärung von "Einmal im Netz, immer im Netz". Optional: Erklärvideo.</td>
+                                                            <td class="p-3 border align-top">SuS hören zu, verstehen den Unterschied zwischen geschützter und öffentlicher Nachricht.</td>
+                                                            <td class="p-3 border align-top">Analogie wird mehrfach und mit einfachen Worten wiederholt.</td>
+                                                        </tr>
+                                                        <tr class="border-t bg-gray-50">
+                                                            <td class="p-3 border align-top"><strong>Sicherung</strong></td>
+                                                            <td class="p-3 border align-top">20 Min.</td>
+                                                            <td class="p-3 border align-top">Arbeitsblatt "Mein Daten-Tresor": SuS malen/schreiben private Daten in den Tresor und öffentliche daneben.</td>
+                                                            <td class="p-3 border align-top">SuS wiederholen und festigen die Zuordnung von Daten.</td>
+                                                            <td class="p-3 border align-top">Niveau 1: Nur malen. Niveau 2: Begriffe schreiben.</td>
+                                                        </tr>
+                                                        <tr class="border-t">
+                                                            <td class="p-3 border align-top"><strong>Abschluss</strong></td>
+                                                            <td class="p-3 border align-top">10 Min.</td>
+                                                            <td class="p-3 border align-top">Einige SuS zeigen ihre Tresor-Bilder. Ableitung der "Goldenen Regel": Frage immer um Erlaubnis!</td>
+                                                            <td class="p-3 border align-top">SuS präsentieren Ergebnisse, sprechen die Regel im Chor.</td>
+                                                            <td class="p-3 border align-top">Regel wird auf einem Plakat visualisiert und aufgehängt.</td>
+                                                        </tr>
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                             <!-- Accordion Item 2.3 -->
+                            <div class="accordion-item">
+                                <button class="accordion-button flex justify-between items-center no-print">
+                                    <span class="font-bold text-lg">2.3 Das Super-Passwort – Mein geheimer Schlüssel</span>
+                                    <span class="icon text-2xl font-bold text-[#C18C5D]">▼</span>
+                                </button>
+                                <div class="accordion-content">
+                                    <div class="p-6 space-y-6 relative">
+                                        <button class="print-button no-print absolute top-4 right-4 bg-[#C18C5D] text-white font-bold py-2 px-4 rounded-lg shadow-md hover:bg-[#a9794e] transition-colors duration-300">Diese Einheit drucken (PDF)</button>
+                                        <div>
+                                            <h4 class="font-bold text-xl text-[#C18C5D] mb-2">Eckdaten der Unterrichtseinheit</h4>
+                                            <ul class="list-disc list-inside space-y-1 pl-2">
+                                                <li><strong>Zeitbedarf:</strong> 1 Doppelstunde (ca. 90 Minuten)</li>
+                                                <li><strong>Sozialform:</strong> Plenum (Stuhlkreis), Einzelarbeit</li>
+                                                <li><strong>Raum:</strong> Klassenraum mit Tafel oder Smartboard</li>
+                                            </ul>
+                                        </div>
+                                        <div>
+                                            <h4 class="font-bold text-xl text-[#C18C5D] mb-2">Lernziele</h4>
+                                            <p><strong>Groblernziel:</strong> Die Notwendigkeit von sicheren Passwörtern zu verstehen und einfache Regeln für deren Erstellung anzuwenden.</p>
+                                            <ul class="list-disc list-inside space-y-1 mt-2 pl-2">
+                                                <li>Mit der Analogie des Schlüssels erklären, wofür ein Passwort benötigt wird.</li>
+                                                <li>Mindestens zwei Merkmale eines schwachen Passworts nennen.</li>
+                                                <li>Die vier Grundregeln für ein starkes Passwort benennen.</li>
+                                                <li>Eine einfache Methode (z.B. Satz-Methode) zur Erstellung eines sicheren Passworts anwenden.</li>
+                                                <li>Die Regel "Mein Passwort ist geheim" verinnerlichen.</li>
+                                            </ul>
+                                        </div>
+                                        <div>
+                                            <h4 class="font-bold text-xl text-[#C18C5D] mb-2">Materialien und Medien</h4>
+                                            <ul class="list-disc list-inside space-y-1 pl-2">
+                                                <li>Großer Schlüssel & Bild eines Tresors</li>
+                                                <li>Plakat/Karten mit Piktogrammen für die 4 Passwort-Regeln</li>
+                                                <li>Karten mit Beispielen für schwache Passwörter</li>
+                                                <li>Arbeitsblatt "Der Passwort-Tresor" & Stifte</li>
+                                            </ul>
+                                        </div>
+                                        <div>
+                                            <h4 class="font-bold text-xl text-[#C18C5D] mb-2">Geplanter Unterrichtsverlauf</h4>
+                                            <div class="lesson-plan-table">
+                                                <table class="w-full text-left border-collapse">
+                                                    <thead class="bg-gray-100">
+                                                        <tr>
+                                                            <th class="p-3 border">Phase</th>
+                                                            <th class="p-3 border">Zeit</th>
+                                                            <th class="p-3 border">Inhalt & Vorgehen der Lehrkraft</th>
+                                                            <th class="p-3 border">Aktivitäten der SuS</th>
+                                                            <th class="p-3 border">Differenzierung</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        <tr class="border-t">
+                                                            <td class="p-3 border align-top"><strong>Einstieg</strong></td>
+                                                            <td class="p-3 border align-top">15 Min.</td>
+                                                            <td class="p-3 border align-top">Ritual; Analogie mit Schlüssel und Tresor. Impuls: "Wofür braucht man einen Schlüssel?" Überleitung: "Ein Passwort ist ein geheimer Schlüssel für deine Sachen im Internet."</td>
+                                                            <td class="p-3 border align-top">SuS äußern sich zur Funktion eines Schlüssels und verstehen die Analogie.</td>
+                                                            <td class="p-3 border align-top">L unterstützt mit Beispielen aus der Lebenswelt der SuS.</td>
+                                                        </tr>
+                                                        <tr class="border-t bg-gray-50">
+                                                            <td class="p-3 border align-top"><strong>Erarbeitung I</strong></td>
+                                                            <td class="p-3 border align-top">20 Min.</td>
+                                                            <td class="p-3 border align-top">L präsentiert Karten mit schwachen Passwörtern. "Sind das sichere Schlüssel?" SuS begründen, warum sie leicht zu erraten sind.</td>
+                                                            <td class="p-3 border align-top">SuS bewerten die Passwörter und erkennen deren Schwächen.</td>
+                                                            <td class="p-3 border align-top">L hilft mit gezielten Fragen: "Könnte jemand, der dich kennt, das erraten?"</td>
+                                                        </tr>
+                                                        <tr class="border-t">
+                                                            <td class="p-3 border align-top"><strong>Erarbeitung II</strong></td>
+                                                            <td class="p-3 border align-top">25 Min.</td>
+                                                            <td class="p-3 border align-top">L stellt die 4 Passwort-Regeln mit Piktogrammen vor. Demonstriert die Satz-Methode (z.B. "Mein Hund Bello ist 7 Jahre alt!" -> MHBi7Ja!).</td>
+                                                            <td class="p-3 border align-top">SuS lernen die Regeln und vollziehen die Satz-Methode nach.</td>
+                                                            <td class="p-3 border align-top">Der Beispielsatz wird gemeinsam mit der Klasse entwickelt.</td>
+                                                        </tr>
+                                                        <tr class="border-t bg-gray-50">
+                                                            <td class="p-3 border align-top"><strong>Sicherung</strong></td>
+                                                            <td class="p-3 border align-top">20 Min.</td>
+                                                            <td class="p-3 border align-top">Arbeitsblatt "Der Passwort-Tresor". Auftrag: "Erfinde ein Super-Passwort für eine Fantasiefigur und prüfe es mit der Checkliste."</td>
+                                                            <td class="p-3 border align-top">SuS wenden die Methode an und erstellen ein starkes Passwort. Sie überprüfen es selbstständig.</td>
+                                                            <td class="p-3 border align-top">Niveau 1: Satz wird vorgegeben. Niveau 2: Eigener Satz.</td>
+                                                        </tr>
+                                                        <tr class="border-t">
+                                                            <td class="p-3 border align-top"><strong>Abschluss</strong></td>
+                                                            <td class="p-3 border align-top">10 Min.</td>
+                                                            <td class="p-3 border align-top">Einige SuS stellen ihren Merksatz vor. Ableitung der wichtigsten Regel: "Mein Passwort ist geheim!"</td>
+                                                            <td class="p-3 border align-top">SuS präsentieren Ergebnisse, wiederholen die "Geheim-Regel" im Chor.</td>
+                                                            <td class="p-3 border align-top">L betont, dass nur Fantasie-Passwörter gezeigt werden dürfen.</td>
+                                                        </tr>
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                             <!-- Accordion Item 2.4 -->
+                            <div class="accordion-item">
+                                <button class="accordion-button flex justify-between items-center no-print">
+                                    <span class="font-bold text-lg">2.4 Richtig suchen, sicher finden – Unterwegs mit Suchmaschinen</span>
+                                    <span class="icon text-2xl font-bold text-[#C18C5D]">▼</span>
+                                </button>
+                                <div class="accordion-content">
+                                    <div class="p-6 space-y-6 relative">
+                                        <button class="print-button no-print absolute top-4 right-4 bg-[#C18C5D] text-white font-bold py-2 px-4 rounded-lg shadow-md hover:bg-[#a9794e] transition-colors duration-300">Diese Einheit drucken (PDF)</button>
+                                        <div>
+                                            <h4 class="font-bold text-xl text-[#C18C5D] mb-2">Eckdaten der Unterrichtseinheit</h4>
+                                            <ul class="list-disc list-inside space-y-1 pl-2">
+                                                <li><strong>Zeitbedarf:</strong> 1 Doppelstunde (ca. 90 Minuten)</li>
+                                                <li><strong>Sozialform:</strong> Plenum, Einzel- oder Partnerarbeit</li>
+                                                <li><strong>Raum:</strong> Computerraum oder Klassenraum mit Tablets/Laptops</li>
+                                            </ul>
+                                        </div>
+                                        <div>
+                                            <h4 class="font-bold text-xl text-[#C18C5D] mb-2">Lernziele</h4>
+                                            <p><strong>Groblernziel:</strong> Den Unterschied zwischen allgemeinen und Kindersuchmaschinen zu verstehen und eine Kindersuchmaschine für eine einfache Recherche zu nutzen.</p>
+                                            <ul class="list-disc list-inside space-y-1 mt-2 pl-2">
+                                                <li>Erklären, dass eine Suchmaschine hilft, Informationen zu finden.</li>
+                                                <li>Mindestens eine Kindersuchmaschine (z.B. `fragFINN`) benennen.</li>
+                                                <li>Verstehen, dass Kindersuchmaschinen geprüfte, sichere Seiten anzeigen.</li>
+                                                <li>Einfache Suchbegriffe für eine Fragestellung formulieren.</li>
+                                                <li>Eine einfache Frage mithilfe einer Kindersuchmaschine beantworten.</li>
+                                            </ul>
+                                        </div>
+                                        <div>
+                                            <h4 class="font-bold text-xl text-[#C18C5D] mb-2">Materialien und Medien</h4>
+                                            <ul class="list-disc list-inside space-y-1 pl-2">
+                                                <li>Computer/Tablets mit Internetzugang und Lesezeichen für `fragFINN.de`</li>
+                                                <li>Beamer oder Smartboard</li>
+                                                <li>Piktogramm-Karten ("sichere Seite" vs. "unsichere Seite")</li>
+                                                <li>Arbeitsblatt "Meine erste Recherche"</li>
+                                            </ul>
+                                        </div>
+                                        <div>
+                                            <h4 class="font-bold text-xl text-[#C18C5D] mb-2">Geplanter Unterrichtsverlauf</h4>
+                                            <div class="lesson-plan-table">
+                                                <table class="w-full text-left border-collapse">
+                                                    <thead class="bg-gray-100">
+                                                        <tr>
+                                                            <th class="p-3 border">Phase</th>
+                                                            <th class="p-3 border">Zeit</th>
+                                                            <th class="p-3 border">Inhalt & Vorgehen der Lehrkraft</th>
+                                                            <th class="p-3 border">Aktivitäten der SuS</th>
+                                                            <th class="p-3 border">Differenzierung</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        <tr class="border-t">
+                                                            <td class="p-3 border align-top"><strong>Einstieg</strong></td>
+                                                            <td class="p-3 border align-top">15 Min.</td>
+                                                            <td class="p-3 border align-top">Ritual; Impuls: "Ihr wollt wissen, was Igel fressen. Wo könnt ihr nachschauen?" L sammelt Ideen und leitet zu Suchmaschinen über.</td>
+                                                            <td class="p-3 border align-top">SuS sammeln Ideen zur Informationssuche (Bücher, Internet etc.).</td>
+                                                            <td class="p-3 border align-top">L nutzt die Analogie "Suchmaschine = Bibliothekar".</td>
+                                                        </tr>
+                                                        <tr class="border-t bg-gray-50">
+                                                            <td class="p-3 border align-top"><strong>Erarbeitung I</strong></td>
+                                                            <td class="p-3 border align-top">25 Min.</td>
+                                                            <td class="p-3 border align-top">L vergleicht am Beamer eine Suche bei Google und `fragFINN`. Erklärt das "Whitelist"-Prinzip mit Piktogrammen (grüner Haken vs. Stoppschild).</td>
+                                                            <td class="p-3 border align-top">SuS beobachten und erkennen die Unterschiede (Werbung, unpassende Inhalte).</td>
+                                                            <td class="p-3 border align-top">L konzentriert sich auf die offensichtlichen, visuellen Unterschiede.</td>
+                                                        </tr>
+                                                        <tr class="border-t">
+                                                            <td class="p-3 border align-top"><strong>Erarbeitung II</strong></td>
+                                                            <td class="p-3 border align-top">30 Min.</td>
+                                                            <td class="p-3 border align-top">**Recherche-Mission:** L stellt das Arbeitsblatt vor. Auftrag: "Findet mit `fragFINN` heraus, was Igel fressen." L unterstützt bei der Formulierung von Suchbegriffen.</td>
+                                                            <td class="p-3 border align-top">SuS formulieren Suchbegriffe, nutzen `fragFINN`, suchen die Antwort und notieren sie.</td>
+                                                            <td class="p-3 border align-top">Niveau 1: Suchbegriffe sind vorgegeben. Niveau 2: Eigene Suchbegriffe.</td>
+                                                        </tr>
+                                                        <tr class="border-t bg-gray-50">
+                                                            <td class="p-3 border align-top"><strong>Abschluss</strong></td>
+                                                            <td class="p-3 border align-top">20 Min.</td>
+                                                            <td class="p-3 border align-top">SuS/Teams lesen ihre Antworten vor. Gespräch: "Warum war `fragFINN` gut?" Ableitung der Regel: "Ich benutze eine Kindersuchmaschine!"</td>
+                                                            <td class="p-3 border align-top">SuS präsentieren Ergebnisse, begründen die Nutzung der Kindersuchmaschine.</td>
+                                                            <td class="p-3 border align-top">Die Regel wird auf einem Plakat visualisiert.</td>
+                                                        </tr>
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Accordion Item 2.5 -->
+                            <div class="accordion-item">
+                                <button class="accordion-button flex justify-between items-center no-print">
+                                    <span class="font-bold text-lg">2.5 Meins, Deins, Unser's? – Bilder und Musik im Netz</span>
+                                    <span class="icon text-2xl font-bold text-[#C18C5D]">▼</span>
+                                </button>
+                                <div class="accordion-content">
+                                    <div class="p-6 space-y-6 relative">
+                                        <button class="print-button no-print absolute top-4 right-4 bg-[#C18C5D] text-white font-bold py-2 px-4 rounded-lg shadow-md hover:bg-[#a9794e] transition-colors duration-300">Diese Einheit drucken (PDF)</button>
+                                        <div>
+                                            <h4 class="font-bold text-xl text-[#C18C5D] mb-2">Eckdaten der Unterrichtseinheit</h4>
+                                            <ul class="list-disc list-inside space-y-1 pl-2">
+                                                <li><strong>Zeitbedarf:</strong> 1 Doppelstunde (ca. 90 Minuten)</li>
+                                                <li><strong>Sozialform:</strong> Plenum (Stuhlkreis), Kleingruppenarbeit</li>
+                                                <li><strong>Raum:</strong> Klassenraum mit Tafel oder Smartboard</li>
+                                            </ul>
+                                        </div>
+                                        <div>
+                                            <h4 class="font-bold text-xl text-[#C18C5D] mb-2">Lernziele</h4>
+                                            <p><strong>Groblernziel:</strong> Die Grundprinzipien des Rechts am eigenen Bild und des Urheberrechts zu verstehen und die zentrale Regel "Immer erst fragen!" anzuwenden.</p>
+                                            <ul class="list-disc list-inside space-y-1 mt-2 pl-2">
+                                                <li>Anhand einer Analogie erklären, warum man nicht alles aus dem Internet einfach verwenden darf.</li>
+                                                <li>Die Regel "Ich bin der Boss über meine Bilder" erklären und anwenden.</li>
+                                                <li>Mithilfe von Ampelkarten einfache Fallbeispiele bewerten.</li>
+                                                <li>Begründen, warum es wichtig ist, um Erlaubnis zu fragen.</li>
+                                            </ul>
+                                        </div>
+                                        <div>
+                                            <h4 class="font-bold text-xl text-[#C18C5D] mb-2">Materialien und Medien</h4>
+                                            <ul class="list-disc list-inside space-y-1 pl-2">
+                                                <li>Persönlicher Gegenstand (z.B. Tagebuch) vs. öffentlicher Gegenstand (Buch)</li>
+                                                <li>Ampelkarten (rot/gelb/grün) für jede Gruppe</li>
+                                                <li>Piktogramm-Karten (Kamera mit ?, Copyright-Symbol ©)</li>
+                                                <li>Laminierte Fallbeispiel-Karten</li>
+                                                <li>Plakat für "Goldene Regeln"</li>
+                                            </ul>
+                                        </div>
+                                        <div>
+                                            <h4 class="font-bold text-xl text-[#C18C5D] mb-2">Geplanter Unterrichtsverlauf</h4>
+                                            <div class="lesson-plan-table">
+                                                <table class="w-full text-left border-collapse">
+                                                    <thead class="bg-gray-100">
+                                                        <tr>
+                                                            <th class="p-3 border">Phase</th>
+                                                            <th class="p-3 border">Zeit</th>
+                                                            <th class="p-3 border">Inhalt & Vorgehen der Lehrkraft</th>
+                                                            <th class="p-3 border">Aktivitäten der SuS</th>
+                                                            <th class="p-3 border">Differenzierung</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        <tr class="border-t">
+                                                            <td class="p-3 border align-top"><strong>Einstieg</strong></td>
+                                                            <td class="p-3 border align-top">15 Min.</td>
+                                                            <td class="p-3 border align-top">Ritual; Analogie mit persönlichem Bild vs. Bücherei-Buch. Impuls: "Wann muss ich um Erlaubnis fragen, wenn ich etwas kopieren will?"</td>
+                                                            <td class="p-3 border align-top">SuS diskutieren und erkennen, dass persönliche Werke einen "Besitzer" haben.</td>
+                                                            <td class="p-3 border align-top">L unterstützt die Diskussion mit gezielten Fragen.</td>
+                                                        </tr>
+                                                        <tr class="border-t bg-gray-50">
+                                                            <td class="p-3 border align-top"><strong>Erarbeitung I</strong></td>
+                                                            <td class="p-3 border align-top">25 Min.</td>
+                                                            <td class="p-3 border align-top">Regel "Du bist der Boss über deine Bilder" einführen. Fallbeispiel 1 (Foto im Chat) mit Ampelkarten von Gruppen bewerten lassen und auflösen.</td>
+                                                            <td class="p-3 border align-top">SuS diskutieren den Fall, bewerten mit Ampelkarten und verinnerlichen die Regel.</td>
+                                                            <td class="p-3 border align-top">L gibt den Gruppen genug Zeit und formuliert die Begründung sehr einfach.</td>
+                                                        </tr>
+                                                        <tr class="border-t">
+                                                            <td class="p-3 border align-top"><strong>Erarbeitung II</strong></td>
+                                                            <td class="p-3 border align-top">25 Min.</td>
+                                                            <td class="p-3 border align-top">Urheberrecht erklären: "Auch Dinge im Netz gehören jemandem". ©-Symbol zeigen. Fallbeispiel 2 (Fußballer-Bild) mit Ampelkarten bewerten lassen.</td>
+                                                            <td class="p-3 border align-top">SuS bewerten den Fall und lernen das ©-Symbol als "Stopp"-Zeichen kennen.</td>
+                                                            <td class="p-3 border align-top">L gibt kurzen Ausblick auf Webseiten mit kostenlosen Bildern.</td>
+                                                        </tr>
+                                                        <tr class="border-t bg-gray-50">
+                                                            <td class="p-3 border align-top"><strong>Sicherung</strong></td>
+                                                            <td class="p-3 border align-top">15 Min.</td>
+                                                            <td class="p-3 border align-top">Gruppen erhalten weitere Fallbeispiele, bewerten diese und begründen ihre Entscheidung.</td>
+                                                            <td class="p-3 border align-top">SuS wenden das Gelernte auf neue Fälle an und präsentieren ihre Begründung.</td>
+                                                            <td class="p-3 border align-top">L hilft bei der Formulierung und gibt bei Bedarf eindeutige Fallbeispiele.</td>
+                                                        </tr>
+                                                        <tr class="border-t">
+                                                            <td class="p-3 border align-top"><strong>Abschluss</strong></td>
+                                                            <td class="p-3 border align-top">10 Min.</td>
+                                                            <td class="p-3 border align-top">Zwei "Goldene Regeln" auf einem Plakat festhalten und im Raum aufhängen.</td>
+                                                            <td class="p-3 border align-top">SuS lesen die Regeln laut vor und wiederholen sie.</td>
+                                                            <td class="p-3 border align-top">Regeln werden mit Piktogrammen visualisiert.</td>
+                                                        </tr>
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Accordion Item 2.6 -->
+                            <div class="accordion-item">
+                                <button class="accordion-button flex justify-between items-center no-print">
+                                    <span class="font-bold text-lg">2.6 Projektwerkstatt: Die Prüfung – Mein Internet-Führerschein</span>
+                                    <span class="icon text-2xl font-bold text-[#C18C5D]">▼</span>
+                                </button>
+                                <div class="accordion-content">
+                                    <div class="p-6 space-y-6 relative">
+                                        <button class="print-button no-print absolute top-4 right-4 bg-[#C18C5D] text-white font-bold py-2 px-4 rounded-lg shadow-md hover:bg-[#a9794e] transition-colors duration-300">Diese Einheit drucken (PDF)</button>
+                                        <div>
+                                            <h4 class="font-bold text-xl text-[#C18C5D] mb-2">Eckdaten der Unterrichtseinheit</h4>
+                                            <ul class="list-disc list-inside space-y-1 pl-2">
+                                                <li><strong>Zeitbedarf:</strong> 1 Doppelstunde (ca. 90 Minuten)</li>
+                                                <li><strong>Sozialform:</strong> Plenum, Einzel- oder Partnerarbeit</li>
+                                                <li><strong>Raum:</strong> Computerraum oder Klassenraum mit Tablets/Laptops</li>
+                                            </ul>
+                                        </div>
+                                        <div>
+                                            <h4 class="font-bold text-xl text-[#C18C5D] mb-2">Lernziele</h4>
+                                            <p><strong>Groblernziel:</strong> Das in Modul 2 erworbene Wissen spielerisch anzuwenden und durch den Erwerb eines Zertifikats eine positive Bestätigung zu erfahren.</p>
+                                            <ul class="list-disc list-inside space-y-1 mt-2 pl-2">
+                                                <li>Die Lernmodule des `Internet-ABC` selbstständig navigieren.</li>
+                                                <li>Fragen zu Datenschutz, Passwörtern, Suchen und Urheberrecht beantworten.</li>
+                                                <li>Die Prüfung zum "Surfschein" erfolgreich absolvieren.</li>
+                                                <li>Stolz auf das erreichte Zertifikat sein.</li>
+                                            </ul>
+                                        </div>
+                                        <div>
+                                            <h4 class="font-bold text-xl text-[#C18C5D] mb-2">Materialien und Medien</h4>
+                                            <ul class="list-disc list-inside space-y-1 pl-2">
+                                                <li>Computer/Tablets mit Lesezeichen für `internet-abc.de`</li>
+                                                <li>Beamer oder Smartboard</li>
+                                                <li>Drucker und laminierte Urkunden-Vordrucke</li>
+                                                <li>Optional: "Siegerehrungsecke"</li>
+                                            </ul>
+                                        </div>
+                                        <div>
+                                            <h4 class="font-bold text-xl text-[#C18C5D] mb-2">Geplanter Unterrichtsverlauf</h4>
+                                            <div class="lesson-plan-table">
+                                                <table class="w-full text-left border-collapse">
+                                                    <thead class="bg-gray-100">
+                                                        <tr>
+                                                            <th class="p-3 border">Phase</th>
+                                                            <th class="p-3 border">Zeit</th>
+                                                            <th class="p-3 border">Inhalt & Vorgehen der Lehrkraft</th>
+                                                            <th class="p-3 border">Aktivitäten der SuS</th>
+                                                            <th class="p-3 border">Differenzierung</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        <tr class="border-t">
+                                                            <td class="p-3 border align-top"><strong>Einstieg</strong></td>
+                                                            <td class="p-3 border align-top">15 Min.</td>
+                                                            <td class="p-3 border align-top">Ritual; Feierliche Ankündigung: "Heute macht ihr euren Internet-Führerschein!" L betont den Spielcharakter.</td>
+                                                            <td class="p-3 border align-top">SuS sind motiviert und neugierig auf die "Prüfung".</td>
+                                                            <td class="p-3 border align-top">L nimmt den Druck: "Jeder kann das schaffen!"</td>
+                                                        </tr>
+                                                        <tr class="border-t bg-gray-50">
+                                                            <td class="p-3 border align-top"><strong>Erarbeitung</strong></td>
+                                                            <td class="p-3 border align-top">30 Min.</td>
+                                                            <td class="p-3 border align-top">L zeigt die `Internet-ABC`-Webseite. Auftrag: "Übt noch einmal in den Lernmodulen, die euch interessieren."</td>
+                                                            <td class="p-3 border align-top">SuS wiederholen die Inhalte in ihrem eigenen Tempo auf der Webseite.</td>
+                                                            <td class="p-3 border align-top">Partnerarbeit für unsichere SuS. L gibt gezielte Hinweise zu relevanten Modulen.</td>
+                                                        </tr>
+                                                        <tr class="border-t">
+                                                            <td class="p-3 border align-top"><strong>Sicherung</strong></td>
+                                                            <td class="p-3 border align-top">30 Min.</td>
+                                                            <td class="p-3 border align-top">**Führerschein-Prüfung:** L gibt das Startsignal. L agiert als "Prüfer" und hilft bei Verständnisschwierigkeiten.</td>
+                                                            <td class="p-3 border align-top">SuS absolvieren die interaktive Prüfung zum Surfschein.</td>
+                                                            <td class="p-3 border align-top">Prüfung kann wiederholt werden. L kann leseschwachen SuS vorlesen.</td>
+                                                        </tr>
+                                                        <tr class="border-t bg-gray-50">
+                                                            <td class="p-3 border align-top"><strong>Abschluss</strong></td>
+                                                            <td class="p-3 border align-top">15 Min.</td>
+                                                            <td class="p-3 border align-top">**Siegerehrung:** L druckt die Urkunden aus und überreicht sie feierlich. "Herzlichen Glückwunsch! Du bist jetzt ein geprüfter Internet-Profi!"</td>
+                                                            <td class="p-3 border align-top">SuS nehmen stolz ihre Urkunden entgegen. Die Klasse applaudiert.</td>
+                                                            <td class="p-3 border align-top">Jeder Teilnehmer erhält eine Form der Anerkennung.</td>
+                                                        </tr>
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Other Modules as placeholders -->
+                    <div class="tab-pane" id="tab-3"><p class="text-center p-8 text-gray-500 no-print">Details für Modul 3 werden in Kürze hinzugefügt.</p></div>
+                    <div class="tab-pane" id="tab-4"><p class="text-center p-8 text-gray-500 no-print">Details für Modul 4 werden in Kürze hinzugefügt.</p></div>
+                </div>
+            </div>
+        </section>
+        
+        <hr class="border-t-2 border-gray-200 my-16 no-print">
+
+        <!-- Werkzeuge Section -->
+        <section id="werkzeuge" class="mb-16 scroll-mt-20 no-print">
+            <h2 class="text-3xl font-bold text-center mb-4 text-[#4a4a4a]">Empfohlene Werkzeuge & Plattformen</h2>
+            <p class="max-w-2xl mx-auto text-center text-gray-600 mb-10">Diese Tabelle bietet eine schnelle Übersicht empfohlener digitaler Tools, die im Lehrplan zum Einsatz kommen. Alle sind kostenlos und für den Einsatz in der Schule gut geeignet.</p>
+            <div class="bg-white rounded-lg shadow-lg overflow-x-auto">
+                <table class="w-full text-left">
+                    <thead class="bg-gray-100">
+                        <tr>
+                            <th class="p-4 font-bold">Tool</th>
+                            <th class="p-4 font-bold">Einsatz</th>
+                            <th class="p-4 font-bold">Besonderheit</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="border-t">
+                            <td class="p-4 font-semibold">Scratch / OctoStudio</td>
+                            <td class="p-4">Erste Programmierschritte</td>
+                            <td class="p-4">Visuell, blockbasiert, sehr intuitiv</td>
+                        </tr>
+                        <tr class="border-t bg-gray-50">
+                            <td class="p-4 font-semibold">Stop Motion Studio</td>
+                            <td class="p-4">Trickfilm-Projekt</td>
+                            <td class="p-4">Einfache Bedienung, schnelle Erfolge</td>
+                        </tr>
+                        <tr class="border-t">
+                            <td class="p-4 font-semibold">Internet-ABC</td>
+                            <td class="p-4">"Surfschein"-Prüfung</td>
+                            <td class="p-4">Spielerisch, motivierend (Urkunde)</td>
+                        </tr>
+                        <tr class="border-t bg-gray-50">
+                            <td class="p-4 font-semibold">fragFINN</td>
+                            <td class="p-4">Sichere Recherche</td>
+                            <td class="p-4">Geprüfte Whitelist, geschützter Raum</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <hr class="border-t-2 border-gray-200 my-16 no-print">
+
+        <!-- Eltern Section -->
+        <section id="eltern" class="scroll-mt-20 text-center bg-white rounded-lg shadow-lg p-8 no-print">
+            <h2 class="text-3xl font-bold mb-4 text-[#C18C5D]">Zusammenarbeit mit den Eltern</h2>
+            <p class="max-w-2xl mx-auto text-gray-700 mb-6">Nachhaltige Medienkompetenz entsteht im Dialog zwischen Schule und Elternhaus. Sprechen Sie mit Ihrem Kind, zeigen Sie Interesse an seiner digitalen Welt und etablieren Sie gemeinsam klare Familienregeln für die Mediennutzung.</p>
+            <a href="https://www.klicksafe.de/eltern" target="_blank" class="inline-block bg-[#C18C5D] text-white font-bold py-3 px-6 rounded-lg shadow-md hover:bg-[#a9794e] transition-colors duration-300">
+                Hilfreiche Materialien für Eltern finden
+            </a>
+        </section>
+    </main>
+
+    <footer class="text-center py-8 mt-8 border-t border-gray-200 no-print">
+        <p class="text-gray-500">Ein interaktiver Leitfaden basierend auf dem Lehrplan Medienkunde für Förderschulen.</p>
+        <div class="mt-2 text-sm text-gray-400">
+            <p>Version 1.9</p>
+            <a href="#" id="version-history-link" class="underline hover:text-[#C18C5D]">Letzte Aktualisierung: 02. Juli 2025</a>
+        </div>
+        <a href="#" id="impressum-link" class="text-sm text-gray-500 hover:text-[#C18C5D] transition-colors duration-300 mt-2 inline-block">Impressum</a>
+    </footer>
+
+    <!-- Impressum Modal -->
+    <div id="impressum-modal" class="modal fixed inset-0 z-50 items-center justify-center bg-black bg-opacity-50 hidden">
+        <div class="bg-white rounded-lg shadow-xl m-4 md:m-8 p-6 max-w-lg w-full relative">
+            <button id="close-impressum" class="absolute top-2 right-4 text-3xl font-bold text-gray-500 hover:text-gray-800">&times;</button>
+            <h2 class="text-2xl font-bold mb-4">Impressum</h2>
+            <div class="text-left space-y-2 text-sm">
+                <p>Angaben gemäß § 5 TMG</p>
+                <p>
+                    Marcel Höfert<br>
+                    Robert-Friese-Straße 2<br>
+                    07629 Hersdorf
+                </p>
+                <p>
+                    <strong>Kontakt:</strong><br>
+                    Telefon: 0172-9228743<br>
+                    E-Mail: m.hoefert@kampfkunstschule-hermsdorf.com
+                </p>
+                <p>
+                    <strong>Verantwortlich für den Inhalt nach § 55 Abs. 2 RStV:</strong><br>
+                    Marcel Höfert<br>
+                    Robert-Friese-Straße 2<br>
+                    07629 Hersdorf
+                </p>
+                <p class="mt-4"><strong>Haftungsausschluss:</strong><br>
+                Trotz sorgfältiger inhaltlicher Kontrolle übernehmen wir keine Haftung für die Inhalte externer Links. Für den Inhalt der verlinkten Seiten sind ausschließlich deren Betreiber verantwortlich.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Version History Modal -->
+    <div id="version-history-modal" class="modal fixed inset-0 z-50 items-center justify-center bg-black bg-opacity-50 hidden">
+        <div class="bg-white rounded-lg shadow-xl m-4 md:m-8 p-6 max-w-lg w-full relative">
+            <button id="close-version-history" class="absolute top-2 right-4 text-3xl font-bold text-gray-500 hover:text-gray-800">&times;</button>
+            <h2 class="text-2xl font-bold mb-4">Versionsverlauf / Changelog</h2>
+            <div class="text-left space-y-4 text-sm max-h-96 overflow-y-auto">
+                 <div>
+                    <h3 class="font-bold">Version 1.9 <span class="font-normal text-gray-500">- 02. Juli 2025</span></h3>
+                    <ul class="list-disc list-inside pl-2 mt-1">
+                        <li>Unterrichtseinheit 2.6 hinzugefügt.</li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 class="font-bold">Version 1.8</h3>
+                    <ul class="list-disc list-inside pl-2 mt-1">
+                        <li>Unterrichtseinheit 2.5 hinzugefügt.</li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 class="font-bold">Version 1.7</h3>
+                    <ul class="list-disc list-inside pl-2 mt-1">
+                        <li>Unterrichtseinheit 2.4 hinzugefügt.</li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 class="font-bold">Version 1.6</h3>
+                    <ul class="list-disc list-inside pl-2 mt-1">
+                        <li>Unterrichtseinheit 2.3 hinzugefügt.</li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 class="font-bold">Version 1.5</h3>
+                    <ul class="list-disc list-inside pl-2 mt-1">
+                        <li>Unterrichtseinheit 2.2 hinzugefügt.</li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 class="font-bold">Version 1.4</h3>
+                    <ul class="list-disc list-inside pl-2 mt-1">
+                        <li>Versionshistorie als aufrufbares Fenster (Modal) hinzugefügt.</li>
+                        <li>Datum der letzten Aktualisierung korrigiert.</li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 class="font-bold">Version 1.3</h3>
+                    <ul class="list-disc list-inside pl-2 mt-1">
+                        <li>Impressum mit Platzhalterdaten hinzugefügt und im Footer verlinkt.</li>
+                    </ul>
+                </div>
+                 <div>
+                    <h3 class="font-bold">Version 1.2</h3>
+                    <ul class="list-disc list-inside pl-2 mt-1">
+                        <li>Druckfunktion für Unterrichtseinheiten optimiert, um leere Seiten zu verhindern.</li>
+                        <li>Navigation der Modul-Reiter verbessert für direkte Anzeige des Inhalts.</li>
+                         <li>Visuelle Trennlinien zwischen den Hauptabschnitten eingefügt.</li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 class="font-bold">Version 1.1</h3>
+                    <ul class="list-disc list-inside pl-2 mt-1">
+                        <li>Druckfunktion für einzelne Unterrichtseinheiten hinzugefügt.</li>
+                        <li>Detaillierte Unterrichtsplanungen für die Lerneinheiten 1.1 bis 1.5 erstellt und integriert.</li>
+                    </ul>
+                </div>
+                 <div>
+                    <h3 class="font-bold">Version 1.0</h3>
+                    <ul class="list-disc list-inside pl-2 mt-1">
+                        <li>Initialerstellung des interaktiven Lehrplans mit Grundstruktur und Modul-Übersicht.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const tabs = document.querySelectorAll('.tab-button');
+            const panes = document.querySelectorAll('.tab-pane');
+            const navLinks = document.querySelectorAll('.nav-item');
+            const accordions = document.querySelectorAll('.accordion-button');
+            const printButtons = document.querySelectorAll('.print-button');
+            const impressumModal = document.getElementById('impressum-modal');
+            const impressumLink = document.getElementById('impressum-link');
+            const closeImpressumButton = document.getElementById('close-impressum');
+            const versionHistoryModal = document.getElementById('version-history-modal');
+            const versionHistoryLink = document.getElementById('version-history-link');
+            const closeVersionHistoryButton = document.getElementById('close-version-history');
+
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    tabs.forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+                    
+                    const tabId = tab.dataset.tab;
+                    panes.forEach(pane => {
+                        pane.classList.remove('active');
+                        if(pane.id === `tab-${tabId}`) {
+                            pane.classList.add('active');
+                        }
+                    });
+                });
+            });
+
+            accordions.forEach(button => {
+                button.addEventListener('click', () => {
+                    const content = button.nextElementSibling;
+                    button.classList.toggle('active');
+
+                    if (content.style.maxHeight) {
+                        content.style.maxHeight = null;
+                    } else {
+                        content.style.maxHeight = content.scrollHeight + "px";
+                    }
+                });
+            });
+
+            navLinks.forEach(link => {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    document.querySelector(link.getAttribute('href')).scrollIntoView({ behavior: 'smooth' });
+                    navLinks.forEach(l => l.classList.remove('active'));
+                    link.classList.add('active');
+                });
+            });
+            
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const id = entry.target.id;
+                        navLinks.forEach(l => {
+                            l.classList.toggle('active', l.getAttribute('href') === `#${id}`);
+                        });
+                    }
+                });
+            }, { rootMargin: "-30% 0px -70% 0px" });
+
+            document.querySelectorAll('main section').forEach(section => {
+                observer.observe(section);
+            });
+
+            printButtons.forEach(button => {
+                button.addEventListener('click', (e) => {
+                    const accordionItem = e.target.closest('.accordion-item');
+                    const printContainer = document.createElement('div');
+                    const contentToPrint = accordionItem.querySelector('.accordion-content > div').cloneNode(true);
+                    
+                    printContainer.classList.add('print-container');
+                    printContainer.appendChild(contentToPrint);
+                    document.body.appendChild(printContainer);
+                    
+                    window.print();
+                    
+                    document.body.removeChild(printContainer);
+                });
+            });
+            
+            // Impressum Modal Logic
+            impressumLink.addEventListener('click', (e) => {
+                e.preventDefault();
+                impressumModal.classList.remove('hidden');
+                impressumModal.classList.add('flex');
+            });
+
+            closeImpressumButton.addEventListener('click', () => {
+                impressumModal.classList.add('hidden');
+                impressumModal.classList.remove('flex');
+            });
+
+            impressumModal.addEventListener('click', (e) => {
+                if (e.target === impressumModal) {
+                    impressumModal.classList.add('hidden');
+                    impressumModal.classList.remove('flex');
+                }
+            });
+
+            // Version History Modal Logic
+            versionHistoryLink.addEventListener('click', (e) => {
+                e.preventDefault();
+                versionHistoryModal.classList.remove('hidden');
+                versionHistoryModal.classList.add('flex');
+            });
+
+            closeVersionHistoryButton.addEventListener('click', () => {
+                versionHistoryModal.classList.add('hidden');
+                versionHistoryModal.classList.remove('flex');
+            });
+
+            versionHistoryModal.addEventListener('click', (e) => {
+                if (e.target === versionHistoryModal) {
+                    versionHistoryModal.classList.add('hidden');
+                    versionHistoryModal.classList.remove('flex');
+                }
+            });
+        });
+    </script>
+</body>
+</html>
